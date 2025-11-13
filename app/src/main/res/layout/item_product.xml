@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="6dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    android:foreground="?android:attr/selectableItemBackground">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp">
+
+        <!-- Badge -->
+        <TextView
+            android:id="@+id/tvBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:text="MỚI"
+            android:textColor="@android:color/white"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:background="@drawable/badge_new"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp"
+            android:visibility="gone" />
+
+        <!-- Product Image -->
+        <ImageView
+            android:id="@+id/ivProduct"
+            android:layout_width="match_parent"
+            android:layout_height="140dp"
+            android:layout_below="@id/tvBadge"
+            android:layout_marginTop="4dp"
+            android:scaleType="centerCrop"
+            android:background="@color/colorBackground" />
+
+        <!-- Favorite Icon -->
+        <ImageView
+            android:id="@+id/ivFavorite"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignBottom="@id/ivProduct"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:padding="6dp"
+            android:src="@drawable/ic_favorite_border"
+            android:background="@drawable/bg_circle_white"
+            android:elevation="4dp" />
+
+        <!-- Product Name -->
+        <TextView
+            android:id="@+id/tvName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/ivProduct"
+            android:layout_marginTop="12dp"
+            android:text="Product Name"
+            android:textSize="14sp"
+            android:textColor="@color/colorTextPrimary"
+            android:textStyle="bold"
+            android:maxLines="2"
+            android:ellipsize="end" />
+
+        <!-- Price -->
+        <TextView
+            android:id="@+id/tvPrice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tvName"
+            android:layout_marginTop="8dp"
+            android:text="100.000đ"
+            android:textSize="16sp"
+            android:textColor="@color/colorAccent"
+            android:textStyle="bold" />
+
+        <!-- Stock -->
+        <TextView
+            android:id="@+id/tvStock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tvPrice"
+            android:layout_marginTop="4dp"
+            android:text="Còn: 50"
+            android:textSize="12sp"
+            android:textColor="@color/colorGreen" />
+
+    </RelativeLayout>
+</androidx.cardview.widget.CardView>

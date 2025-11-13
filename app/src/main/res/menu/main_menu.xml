@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_search"
+        android:title="Tìm kiếm"
+        android:icon="@drawable/ic_search"
+        app:showAsAction="ifRoom"
+        app:actionViewClass="androidx.appcompat.widget.SearchView" />
+
+    <item
+        android:id="@+id/action_cart"
+        android:title="Giỏ hàng"
+        android:icon="@drawable/ic_cart"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_orders"
+        android:title="Đơn hàng"
+        android:icon="@drawable/ic_orders"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_profile"
+        android:title="Tài khoản"
+        android:icon="@drawable/ic_profile"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_logout"
+        android:title="Đăng xuất"
+        app:showAsAction="never" />
+
+</menu>

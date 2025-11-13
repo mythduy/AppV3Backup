@@ -1,0 +1,549 @@
+package com.example.ecommerceapp.database;
+
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import com.example.ecommerceapp.models.*;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
+public class DatabaseHelper extends SQLiteOpenHelper {
+    private static final String DATABASE_NAME = "ElectronicsShop.db";
+    private static final int DATABASE_VERSION = 2;
+
+    // Tables
+    private static final String TABLE_USERS = "users";
+    private static final String TABLE_PRODUCTS = "products";
+    private static final String TABLE_CART = "cart";
+    private static final String TABLE_ORDERS = "orders";
+    private static final String TABLE_ORDER_ITEMS = "order_items";
+
+    public DatabaseHelper(Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        // Create Users table
+        String createUsersTable = "CREATE TABLE " + TABLE_USERS + " (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "username TEXT UNIQUE, " +
+                "email TEXT, " +
+                "password TEXT, " +
+                "full_name TEXT, " +
+                "phone TEXT, " +
+                "address TEXT)";
+        db.execSQL(createUsersTable);
+
+        // Create Products table
+        String createProductsTable = "CREATE TABLE " + TABLE_PRODUCTS + " (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "name TEXT, " +
+                "description TEXT, " +
+                "price REAL, " +
+                "category TEXT, " +
+                "stock INTEGER, " +
+                "image_url TEXT)";
+        db.execSQL(createProductsTable);
+
+        // Create Cart table
+        String createCartTable = "CREATE TABLE " + TABLE_CART + " (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "user_id INTEGER, " +
+                "product_id INTEGER, " +
+                "quantity INTEGER, " +
+                "FOREIGN KEY(user_id) REFERENCES users(id), " +
+                "FOREIGN KEY(product_id) REFERENCES products(id))";
+        db.execSQL(createCartTable);
+
+        // Create Orders table
+        String createOrdersTable = "CREATE TABLE " + TABLE_ORDERS + " (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "user_id INTEGER, " +
+                "order_date TEXT, " +
+                "total_amount REAL, " +
+                "status TEXT, " +
+                "shipping_address TEXT, " +
+                "payment_method TEXT, " +
+                "FOREIGN KEY(user_id) REFERENCES users(id))";
+        db.execSQL(createOrdersTable);
+
+        // Create Order Items table
+        String createOrderItemsTable = "CREATE TABLE " + TABLE_ORDER_ITEMS + " (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "order_id INTEGER, " +
+                "product_id INTEGER, " +
+                "quantity INTEGER, " +
+                "price REAL, " +
+                "FOREIGN KEY(order_id) REFERENCES orders(id), " +
+                "FOREIGN KEY(product_id) REFERENCES products(id))";
+        db.execSQL(createOrderItemsTable);
+
+        // Insert sample products
+        insertSampleProducts(db);
+        
+        // Insert default user
+        insertDefaultUser(db);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_ORDER_ITEMS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_ORDERS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_CART);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_PRODUCTS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
+        onCreate(db);
+    }
+
+    private void insertSampleProducts(SQLiteDatabase db) {
+        String[][] products = {
+                {"Arduino Uno R3", "Vi điều khiển Arduino Uno R3 chính hãng", "250000", "Vi điều khiển", "50"},
+                {"Raspberry Pi 4", "Máy tính nhúng Raspberry Pi 4 Model B 4GB", "1500000", "Máy tính nhúng", "30"},
+                {"ESP32 DevKit", "Module ESP32 WiFi Bluetooth", "150000", "Module WiFi", "100"},
+                {"Cảm biến DHT22", "Cảm biến nhiệt độ độ ẩm DHT22", "85000", "Cảm biến", "200"},
+                {"Servo Motor SG90", "Động cơ Servo SG90 9g", "35000", "Động cơ", "150"},
+                {"LED RGB 5mm", "LED RGB 5mm cathode chung", "5000", "LED", "500"},
+                {"Màn hình LCD 16x2", "Màn hình LCD 16x2 xanh dương", "65000", "Màn hình", "80"},
+                {"Cảm biến siêu âm HC-SR04", "Cảm biến khoảng cách siêu âm", "45000", "Cảm biến", "120"},
+                {"Module Relay 4 kênh", "Module Relay 4 kênh 5V", "95000", "Module", "60"},
+                {"Breadboard 830", "Breadboard 830 lỗ", "25000", "Linh kiện", "200"},
+                {"Jumper Wire", "Dây jumper 40 sợi đực-cái", "15000", "Linh kiện", "300"},
+                {"Nguồn 5V 2A", "Adapter nguồn 5V 2A", "55000", "Nguồn", "100"},
+                {"STM32 Blue Pill", "Vi điều khiển STM32F103C8T6", "120000", "Vi điều khiển", "70"},
+                {"OLED 0.96 inch", "Màn hình OLED 0.96 inch I2C", "75000", "Màn hình", "90"},
+                {"Module RFID RC522", "Module đọc thẻ RFID RC522", "65000", "Module", "85"}
+        };
+
+        for (String[] product : products) {
+            ContentValues values = new ContentValues();
+            values.put("name", product[0]);
+            values.put("description", product[1]);
+            values.put("price", Double.parseDouble(product[2]));
+            values.put("category", product[3]);
+            values.put("stock", Integer.parseInt(product[4]));
+            values.put("image_url", "product_" + product[0].toLowerCase().replace(" ", "_"));
+            db.insert(TABLE_PRODUCTS, null, values);
+        }
+    }
+
+    private void insertDefaultUser(SQLiteDatabase db) {
+        // Tạo tài khoản mặc định
+        // Username: admin
+        // Password: admin123
+        ContentValues values = new ContentValues();
+        values.put("username", "admin");
+        values.put("email", "admin@shop.com");
+        values.put("password", "admin123");
+        values.put("full_name", "Administrator");
+        values.put("phone", "0123456789");
+        values.put("address", "123 Đường ABC, Quận 1, TP.HCM");
+        db.insert(TABLE_USERS, null, values);
+        
+        // Tạo tài khoản user thường
+        // Username: user
+        // Password: user123
+        values = new ContentValues();
+        values.put("username", "user");
+        values.put("email", "user@shop.com");
+        values.put("password", "user123");
+        values.put("full_name", "Nguyễn Văn A");
+        values.put("phone", "0987654321");
+        values.put("address", "456 Đường XYZ, Quận 2, TP.HCM");
+        db.insert(TABLE_USERS, null, values);
+    }
+
+    // User operations
+    public long registerUser(User user) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("username", user.getUsername());
+        values.put("email", user.getEmail());
+        values.put("password", user.getPassword());
+        values.put("full_name", user.getFullName());
+        values.put("phone", user.getPhone());
+        values.put("address", user.getAddress());
+        return db.insert(TABLE_USERS, null, values);
+    }
+
+    public User loginUser(String username, String password) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_USERS, null,
+                "username=? AND password=?",
+                new String[]{username, password},
+                null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            User user = new User();
+            user.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+            user.setUsername(cursor.getString(cursor.getColumnIndexOrThrow("username")));
+            user.setEmail(cursor.getString(cursor.getColumnIndexOrThrow("email")));
+            user.setFullName(cursor.getString(cursor.getColumnIndexOrThrow("full_name")));
+            user.setPhone(cursor.getString(cursor.getColumnIndexOrThrow("phone")));
+            user.setAddress(cursor.getString(cursor.getColumnIndexOrThrow("address")));
+            cursor.close();
+            return user;
+        }
+        if (cursor != null) cursor.close();
+        return null;
+    }
+
+    public User getUserById(int userId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_USERS, null, "id=?",
+                new String[]{String.valueOf(userId)}, null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            User user = new User();
+            user.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+            user.setUsername(cursor.getString(cursor.getColumnIndexOrThrow("username")));
+            user.setEmail(cursor.getString(cursor.getColumnIndexOrThrow("email")));
+            user.setFullName(cursor.getString(cursor.getColumnIndexOrThrow("full_name")));
+            user.setPhone(cursor.getString(cursor.getColumnIndexOrThrow("phone")));
+            user.setAddress(cursor.getString(cursor.getColumnIndexOrThrow("address")));
+            cursor.close();
+            return user;
+        }
+        if (cursor != null) cursor.close();
+        return null;
+    }
+
+    public boolean updateUser(User user) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("full_name", user.getFullName());
+        values.put("email", user.getEmail());
+        values.put("phone", user.getPhone());
+        values.put("address", user.getAddress());
+        int rows = db.update(TABLE_USERS, values, "id=?",
+                new String[]{String.valueOf(user.getId())});
+        return rows > 0;
+    }
+
+    // Product operations
+    public List<Product> getAllProducts() {
+        List<Product> products = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_PRODUCTS, null, null, null, null, null, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                Product product = new Product();
+                product.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+                product.setName(cursor.getString(cursor.getColumnIndexOrThrow("name")));
+                product.setDescription(cursor.getString(cursor.getColumnIndexOrThrow("description")));
+                product.setPrice(cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
+                product.setCategory(cursor.getString(cursor.getColumnIndexOrThrow("category")));
+                product.setStock(cursor.getInt(cursor.getColumnIndexOrThrow("stock")));
+                product.setImageUrl(cursor.getString(cursor.getColumnIndexOrThrow("image_url")));
+                products.add(product);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return products;
+    }
+
+    public Product getProductById(int productId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_PRODUCTS, null, "id=?",
+                new String[]{String.valueOf(productId)}, null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            Product product = new Product();
+            product.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+            product.setName(cursor.getString(cursor.getColumnIndexOrThrow("name")));
+            product.setDescription(cursor.getString(cursor.getColumnIndexOrThrow("description")));
+            product.setPrice(cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
+            product.setCategory(cursor.getString(cursor.getColumnIndexOrThrow("category")));
+            product.setStock(cursor.getInt(cursor.getColumnIndexOrThrow("stock")));
+            product.setImageUrl(cursor.getString(cursor.getColumnIndexOrThrow("image_url")));
+            cursor.close();
+            return product;
+        }
+        if (cursor != null) cursor.close();
+        return null;
+    }
+
+    public List<Product> searchProducts(String query) {
+        List<Product> products = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_PRODUCTS, null,
+                "name LIKE ? OR description LIKE ? OR category LIKE ?",
+                new String[]{"%" + query + "%", "%" + query + "%", "%" + query + "%"},
+                null, null, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                Product product = new Product();
+                product.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+                product.setName(cursor.getString(cursor.getColumnIndexOrThrow("name")));
+                product.setDescription(cursor.getString(cursor.getColumnIndexOrThrow("description")));
+                product.setPrice(cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
+                product.setCategory(cursor.getString(cursor.getColumnIndexOrThrow("category")));
+                product.setStock(cursor.getInt(cursor.getColumnIndexOrThrow("stock")));
+                product.setImageUrl(cursor.getString(cursor.getColumnIndexOrThrow("image_url")));
+                products.add(product);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return products;
+    }
+
+    public List<String> getAllCategories() {
+        List<String> categories = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT DISTINCT category FROM " + TABLE_PRODUCTS, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                categories.add(cursor.getString(0));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return categories;
+    }
+
+    public List<Product> getProductsByCategory(String category) {
+        List<Product> products = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_PRODUCTS, null, "category=?",
+                new String[]{category}, null, null, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                Product product = new Product();
+                product.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+                product.setName(cursor.getString(cursor.getColumnIndexOrThrow("name")));
+                product.setDescription(cursor.getString(cursor.getColumnIndexOrThrow("description")));
+                product.setPrice(cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
+                product.setCategory(cursor.getString(cursor.getColumnIndexOrThrow("category")));
+                product.setStock(cursor.getInt(cursor.getColumnIndexOrThrow("stock")));
+                product.setImageUrl(cursor.getString(cursor.getColumnIndexOrThrow("image_url")));
+                products.add(product);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return products;
+    }
+
+    // Cart operations
+    public long addToCart(int userId, int productId, int quantity) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // Check if product already in cart
+        Cursor cursor = db.query(TABLE_CART, null,
+                "user_id=? AND product_id=?",
+                new String[]{String.valueOf(userId), String.valueOf(productId)},
+                null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            int currentQty = cursor.getInt(cursor.getColumnIndexOrThrow("quantity"));
+            int newQty = currentQty + quantity;
+
+            ContentValues values = new ContentValues();
+            values.put("quantity", newQty);
+            int id = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
+            cursor.close();
+
+            db.update(TABLE_CART, values, "id=?", new String[]{String.valueOf(id)});
+            return id;
+        }
+        if (cursor != null) cursor.close();
+
+        ContentValues values = new ContentValues();
+        values.put("user_id", userId);
+        values.put("product_id", productId);
+        values.put("quantity", quantity);
+        return db.insert(TABLE_CART, null, values);
+    }
+
+    public List<CartItem> getCartItems(int userId) {
+        List<CartItem> cartItems = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String query = "SELECT c.id, c.user_id, c.product_id, c.quantity, " +
+                "p.name, p.price, p.image_url " +
+                "FROM " + TABLE_CART + " c " +
+                "INNER JOIN " + TABLE_PRODUCTS + " p ON c.product_id = p.id " +
+                "WHERE c.user_id = ?";
+
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(userId)});
+
+        if (cursor.moveToFirst()) {
+            do {
+                CartItem item = new CartItem();
+                item.setId(cursor.getInt(0));
+                item.setUserId(cursor.getInt(1));
+                item.setProductId(cursor.getInt(2));
+                item.setQuantity(cursor.getInt(3));
+                item.setProductName(cursor.getString(4));
+                item.setProductPrice(cursor.getDouble(5));
+                item.setImageUrl(cursor.getString(6));
+                cartItems.add(item);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return cartItems;
+    }
+
+    public boolean updateCartItemQuantity(int cartItemId, int quantity) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("quantity", quantity);
+        int rows = db.update(TABLE_CART, values, "id=?",
+                new String[]{String.valueOf(cartItemId)});
+        return rows > 0;
+    }
+
+    public boolean removeFromCart(int cartItemId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        int rows = db.delete(TABLE_CART, "id=?", new String[]{String.valueOf(cartItemId)});
+        return rows > 0;
+    }
+
+    public void clearCart(int userId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_CART, "user_id=?", new String[]{String.valueOf(userId)});
+    }
+
+    // Order operations
+    public long createOrder(Order order, List<CartItem> cartItems) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.beginTransaction();
+
+        try {
+            ContentValues orderValues = new ContentValues();
+            orderValues.put("user_id", order.getUserId());
+            orderValues.put("order_date", order.getOrderDate());
+            orderValues.put("total_amount", order.getTotalAmount());
+            orderValues.put("status", order.getStatus());
+            orderValues.put("shipping_address", order.getShippingAddress());
+            orderValues.put("payment_method", order.getPaymentMethod());
+
+            long orderId = db.insert(TABLE_ORDERS, null, orderValues);
+
+            if (orderId != -1) {
+                for (CartItem item : cartItems) {
+                    ContentValues itemValues = new ContentValues();
+                    itemValues.put("order_id", orderId);
+                    itemValues.put("product_id", item.getProductId());
+                    itemValues.put("quantity", item.getQuantity());
+                    itemValues.put("price", item.getProductPrice());
+                    db.insert(TABLE_ORDER_ITEMS, null, itemValues);
+
+                    // Update product stock
+                    Product product = getProductById(item.getProductId());
+                    int newStock = product.getStock() - item.getQuantity();
+                    ContentValues stockValues = new ContentValues();
+                    stockValues.put("stock", newStock);
+                    db.update(TABLE_PRODUCTS, stockValues, "id=?",
+                            new String[]{String.valueOf(item.getProductId())});
+                }
+
+                clearCart(order.getUserId());
+                db.setTransactionSuccessful();
+            }
+
+            return orderId;
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    public List<Order> getOrderHistory(int userId) {
+        List<Order> orders = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_ORDERS, null, "user_id=?",
+                new String[]{String.valueOf(userId)}, null, null, "id DESC");
+
+        if (cursor.moveToFirst()) {
+            do {
+                Order order = new Order();
+                order.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+                order.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow("user_id")));
+                order.setOrderDate(cursor.getString(cursor.getColumnIndexOrThrow("order_date")));
+                order.setTotalAmount(cursor.getDouble(cursor.getColumnIndexOrThrow("total_amount")));
+                order.setStatus(cursor.getString(cursor.getColumnIndexOrThrow("status")));
+                order.setShippingAddress(cursor.getString(cursor.getColumnIndexOrThrow("shipping_address")));
+                order.setPaymentMethod(cursor.getString(cursor.getColumnIndexOrThrow("payment_method")));
+                orders.add(order);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return orders;
+    }
+
+    public List<Product> getLatestProducts(int limit) {
+        List<Product> products = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_PRODUCTS, null, null, null, null, null,
+                "id DESC", String.valueOf(limit));
+
+        if (cursor.moveToFirst()) {
+            do {
+                Product product = new Product();
+                product.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+                product.setName(cursor.getString(cursor.getColumnIndexOrThrow("name")));
+                product.setDescription(cursor.getString(cursor.getColumnIndexOrThrow("description")));
+                product.setPrice(cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
+                product.setCategory(cursor.getString(cursor.getColumnIndexOrThrow("category")));
+                product.setStock(cursor.getInt(cursor.getColumnIndexOrThrow("stock")));
+                product.setImageUrl(cursor.getString(cursor.getColumnIndexOrThrow("image_url")));
+                products.add(product);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return products;
+    }
+
+    public List<Product> getFeaturedProducts(int limit) {
+        List<Product> products = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_PRODUCTS, null, "stock > ?",
+                new String[]{"10"}, null, null, "price DESC", String.valueOf(limit));
+
+        if (cursor.moveToFirst()) {
+            do {
+                Product product = new Product();
+                product.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+                product.setName(cursor.getString(cursor.getColumnIndexOrThrow("name")));
+                product.setDescription(cursor.getString(cursor.getColumnIndexOrThrow("description")));
+                product.setPrice(cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
+                product.setCategory(cursor.getString(cursor.getColumnIndexOrThrow("category")));
+                product.setStock(cursor.getInt(cursor.getColumnIndexOrThrow("stock")));
+                product.setImageUrl(cursor.getString(cursor.getColumnIndexOrThrow("image_url")));
+                products.add(product);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return products;
+    }
+
+    public List<Product> getBestsellerProducts(int limit) {
+        List<Product> products = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_PRODUCTS, null, null, null, null, null,
+                "RANDOM()", String.valueOf(limit));
+
+        if (cursor.moveToFirst()) {
+            do {
+                Product product = new Product();
+                product.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+                product.setName(cursor.getString(cursor.getColumnIndexOrThrow("name")));
+                product.setDescription(cursor.getString(cursor.getColumnIndexOrThrow("description")));
+                product.setPrice(cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
+                product.setCategory(cursor.getString(cursor.getColumnIndexOrThrow("category")));
+                product.setStock(cursor.getInt(cursor.getColumnIndexOrThrow("stock")));
+                product.setImageUrl(cursor.getString(cursor.getColumnIndexOrThrow("image_url")));
+                products.add(product);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return products;
+    }
+}
