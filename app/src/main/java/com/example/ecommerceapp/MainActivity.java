@@ -45,13 +45,7 @@ public class MainActivity extends AppCompatActivity {
             SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
             userId = prefs.getInt("user_id", -1);
 
-            if (userId == -1) {
-                // Redirect to login if no user
-                startActivity(new Intent(this, LoginActivity.class));
-                finish();
-                return;
-            }
-
+            // Không yêu cầu đăng nhập ngay, cho phép xem sản phẩm
             dbHelper = new DatabaseHelper(this);
 
             initViews();
@@ -164,16 +158,34 @@ public class MainActivity extends AppCompatActivity {
             if (id == R.id.nav_home) {
                 return true;
             } else if (id == R.id.nav_categories) {
-                rvCategories.smoothScrollToPosition(0);
+                startActivity(new Intent(MainActivity.this, CategoriesActivity.class));
                 return true;
             } else if (id == R.id.nav_cart) {
-                startActivity(new Intent(MainActivity.this, CartActivity.class));
+                // Kiểm tra đăng nhập khi vào giỏ hàng
+                if (userId == -1) {
+                    Toast.makeText(this, "Vui lòng đăng nhập để xem giỏ hàng", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(MainActivity.this, LoginActivity.class));
+                } else {
+                    startActivity(new Intent(MainActivity.this, CartActivity.class));
+                }
                 return true;
             } else if (id == R.id.nav_orders) {
-                startActivity(new Intent(MainActivity.this, OrderHistoryActivity.class));
+                // Kiểm tra đăng nhập khi xem đơn hàng
+                if (userId == -1) {
+                    Toast.makeText(this, "Vui lòng đăng nhập để xem đơn hàng", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(MainActivity.this, LoginActivity.class));
+                } else {
+                    startActivity(new Intent(MainActivity.this, OrderHistoryActivity.class));
+                }
                 return true;
             } else if (id == R.id.nav_profile) {
-                startActivity(new Intent(MainActivity.this, ProfileActivity.class));
+                // Kiểm tra đăng nhập khi vào trang cá nhân
+                if (userId == -1) {
+                    Toast.makeText(this, "Vui lòng đăng nhập", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(MainActivity.this, LoginActivity.class));
+                } else {
+                    startActivity(new Intent(MainActivity.this, ProfileActivity.class));
+                }
                 return true;
             }
 
@@ -207,14 +219,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateCartBadge() {
-        cartCount = dbHelper.getCartItems(userId).size();
-        BadgeDrawable badge = bottomNav.getOrCreateBadge(R.id.nav_cart);
-        if (cartCount > 0) {
-            badge.setVisible(true);
-            badge.setNumber(cartCount);
-            badge.setBackgroundColor(androidx.core.content.ContextCompat.getColor(this, R.color.colorRed));
-        } else {
-            badge.setVisible(false);
+        if (userId != -1) {
+            cartCount = dbHelper.getCartItems(userId).size();
+            BadgeDrawable badge = bottomNav.getOrCreateBadge(R.id.nav_cart);
+            if (cartCount > 0) {
+                badge.setVisible(true);
+                badge.setNumber(cartCount);
+                badge.setBackgroundColor(androidx.core.content.ContextCompat.getColor(this, R.color.colorRed));
+            } else {
+                badge.setVisible(false);
+            }
         }
     }
 
@@ -289,6 +303,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        
+        // Cập nhật lại userId khi quay lại (sau khi đăng nhập)
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        userId = prefs.getInt("user_id", -1);
+        
         updateCartBadge();
     }
 }

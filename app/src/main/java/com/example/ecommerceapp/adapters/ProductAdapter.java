@@ -1,15 +1,21 @@
 package com.example.ecommerceapp.adapters;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
+import com.example.ecommerceapp.LoginActivity;
 import com.example.ecommerceapp.R;
+import com.example.ecommerceapp.database.DatabaseHelper;
 import com.example.ecommerceapp.models.Product;
 import java.text.NumberFormat;
 import java.util.List;
@@ -19,6 +25,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
     private Context context;
     private List<Product> products;
     private OnProductClickListener listener;
+    private DatabaseHelper dbHelper;
 
     public interface OnProductClickListener {
         void onProductClick(Product product);
@@ -28,6 +35,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         this.context = context;
         this.products = products;
         this.listener = listener;
+        this.dbHelper = new DatabaseHelper(context);
     }
 
     @NonNull
@@ -57,6 +65,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         CardView cardView;
         ImageView ivProduct, ivFavorite;
         TextView tvName, tvPrice, tvStock, tvBadge;
+        ImageButton btnAddToCart;
 
         ProductViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -67,6 +76,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
             tvPrice = itemView.findViewById(R.id.tvPrice);
             tvStock = itemView.findViewById(R.id.tvStock);
             tvBadge = itemView.findViewById(R.id.tvBadge);
+            btnAddToCart = itemView.findViewById(R.id.btnAddToCart);
 
             itemView.setOnClickListener(v -> {
                 int position = getAdapterPosition();
@@ -77,6 +87,13 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
 
             ivFavorite.setOnClickListener(v -> {
                 // TODO: Implement favorite functionality
+            });
+
+            btnAddToCart.setOnClickListener(v -> {
+                int position = getAdapterPosition();
+                if (position != RecyclerView.NO_POSITION) {
+                    addToCart(products.get(position));
+                }
             });
         }
 
@@ -111,6 +128,31 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         String formatPrice(double price) {
             NumberFormat formatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
             return formatter.format(price);
+        }
+
+        void addToCart(Product product) {
+            if (product.getStock() <= 0) {
+                Toast.makeText(context, "Sản phẩm đã hết hàng", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            SharedPreferences prefs = context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+            int userId = prefs.getInt("user_id", -1);
+
+            // Nếu chưa đăng nhập, chuyển đến trang đăng nhập
+            if (userId == -1) {
+                Toast.makeText(context, "Vui lòng đăng nhập để thêm vào giỏ hàng", Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(context, LoginActivity.class);
+                context.startActivity(intent);
+                return;
+            }
+
+            long result = dbHelper.addToCart(userId, product.getId(), 1);
+            if (result != -1) {
+                Toast.makeText(context, "Đã thêm \"" + product.getName() + "\" vào giỏ hàng", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(context, "Lỗi khi thêm vào giỏ hàng", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 }

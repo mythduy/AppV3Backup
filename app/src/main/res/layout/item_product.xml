@@ -78,7 +78,7 @@
             android:textColor="@color/colorAccent"
             android:textStyle="bold" />
 
-        <!-- Stock -->
+        <!-- Stock (Hidden - keep for reference in adapter) -->
         <TextView
             android:id="@+id/tvStock"
             android:layout_width="wrap_content"
@@ -87,7 +87,23 @@
             android:layout_marginTop="4dp"
             android:text="Còn: 50"
             android:textSize="12sp"
-            android:textColor="@color/colorGreen" />
+            android:textColor="@color/colorGreen"
+            android:visibility="gone" />
+
+        <!-- Add to Cart Button -->
+        <ImageButton
+            android:id="@+id/btnAddToCart"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentEnd="true"
+            android:layout_below="@id/tvPrice"
+            android:layout_marginTop="8dp"
+            android:src="@drawable/ic_add_shopping_cart"
+            android:background="@drawable/bg_circle_primary"
+            android:padding="8dp"
+            android:tint="@color/colorWhite"
+            android:contentDescription="Thêm vào giỏ hàng"
+            android:elevation="2dp" />
 
     </RelativeLayout>
 </androidx.cardview.widget.CardView>

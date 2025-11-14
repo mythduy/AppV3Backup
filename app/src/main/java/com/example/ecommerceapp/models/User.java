@@ -8,6 +8,10 @@ public class User {
     private String fullName;
     private String phone;
     private String address;
+    private String role; // "user" or "admin"
+    private String avatarUrl;
+    private double latitude;
+    private double longitude;
 
     public User() {}
 
@@ -43,4 +47,20 @@ public class User {
 
     public String getAddress() { return address; }
     public void setAddress(String address) { this.address = address; }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
+
+    public boolean isAdmin() { 
+        return role != null && "admin".equalsIgnoreCase(role.trim()); 
+    }
+
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+
+    public double getLatitude() { return latitude; }
+    public void setLatitude(double latitude) { this.latitude = latitude; }
+
+    public double getLongitude() { return longitude; }
+    public void setLongitude(double longitude) { this.longitude = longitude; }
 }

@@ -1,14 +1,8 @@
 package com.example.ecommerceapp;
 
+import android.content.Intent;
 import android.os.Bundle;
-
-import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import android.content.SharedPreferences;
-import android.os.Bundle;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -45,6 +39,11 @@ public class OrderHistoryActivity extends AppCompatActivity {
     private void setupRecyclerView() {
         rvOrders.setLayoutManager(new LinearLayoutManager(this));
         orderAdapter = new OrderAdapter(this);
+        orderAdapter.setOnOrderClickListener(order -> {
+            Intent intent = new Intent(OrderHistoryActivity.this, OrderDetailActivity.class);
+            intent.putExtra("order_id", order.getId());
+            startActivity(intent);
+        });
         rvOrders.setAdapter(orderAdapter);
     }
 

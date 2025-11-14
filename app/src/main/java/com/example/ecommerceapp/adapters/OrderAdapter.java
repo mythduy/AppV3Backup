@@ -16,9 +16,23 @@ import java.util.Locale;
 public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHolder> {
     private Context context;
     private List<Order> orders;
+    private OnOrderClickListener listener;
+
+    public interface OnOrderClickListener {
+        void onOrderClick(Order order);
+    }
 
     public OrderAdapter(Context context) {
         this.context = context;
+    }
+
+    public OrderAdapter(Context context, OnOrderClickListener listener) {
+        this.context = context;
+        this.listener = listener;
+    }
+
+    public void setOnOrderClickListener(OnOrderClickListener listener) {
+        this.listener = listener;
     }
 
     @NonNull
@@ -62,6 +76,12 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
             tvTotal.setText(formatPrice(order.getTotalAmount()));
             tvStatus.setText(order.getStatus());
             tvPayment.setText("Thanh toán: " + order.getPaymentMethod());
+
+            itemView.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onOrderClick(order);
+                }
+            });
         }
 
         String formatPrice(double price) {

@@ -16,15 +16,8 @@ public class SplashActivity extends AppCompatActivity {
         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
-                SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-                int userId = prefs.getInt("user_id", -1);
-
-                Intent intent;
-                if (userId != -1) {
-                    intent = new Intent(SplashActivity.this, MainActivity.class);
-                } else {
-                    intent = new Intent(SplashActivity.this, LoginActivity.class);
-                }
+                // Luôn vào MainActivity, không yêu cầu đăng nhập ngay
+                Intent intent = new Intent(SplashActivity.this, MainActivity.class);
                 startActivity(intent);
                 finish();
             }

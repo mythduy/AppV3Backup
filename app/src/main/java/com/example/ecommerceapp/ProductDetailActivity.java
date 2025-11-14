@@ -69,6 +69,13 @@ public class ProductDetailActivity extends AppCompatActivity {
     }
 
     private void addToCart() {
+        // Kiểm tra đăng nhập trước khi thêm vào giỏ hàng
+        if (userId == -1) {
+            Toast.makeText(this, "Vui lòng đăng nhập để thêm vào giỏ hàng", Toast.LENGTH_LONG).show();
+            startActivity(new android.content.Intent(this, LoginActivity.class));
+            return;
+        }
+        
         if (product.getStock() > 0) {
             long result = dbHelper.addToCart(userId, product.getId(), 1);
             if (result != -1) {
@@ -82,6 +89,13 @@ public class ProductDetailActivity extends AppCompatActivity {
     }
 
     private void buyNow() {
+        // Kiểm tra đăng nhập trước khi mua ngay
+        if (userId == -1) {
+            Toast.makeText(this, "Vui lòng đăng nhập để mua hàng", Toast.LENGTH_LONG).show();
+            startActivity(new android.content.Intent(this, LoginActivity.class));
+            return;
+        }
+        
         if (product.getStock() > 0) {
             addToCart();
             startActivity(new android.content.Intent(this, CartActivity.class));
