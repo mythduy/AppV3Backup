@@ -1,15 +1,9 @@
 package com.example.ecommerceapp;
 
 import android.os.Bundle;
-
-import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.ecommerceapp.database.DatabaseHelper;
@@ -19,6 +13,7 @@ public class RegisterActivity extends AppCompatActivity {
     private EditText etUsername, etEmail, etPassword, etConfirmPassword,
             etFullName, etPhone, etAddress;
     private Button btnRegister;
+    private TextView tvLogin;
     private DatabaseHelper dbHelper;
 
     @Override
@@ -36,8 +31,13 @@ public class RegisterActivity extends AppCompatActivity {
         etPhone = findViewById(R.id.etPhone);
         etAddress = findViewById(R.id.etAddress);
         btnRegister = findViewById(R.id.btnRegister);
+        tvLogin = findViewById(R.id.tvLogin);
 
         btnRegister.setOnClickListener(v -> register());
+        
+        tvLogin.setOnClickListener(v -> {
+            finish(); // Quay lại màn hình Login
+        });
     }
 
     private void register() {
