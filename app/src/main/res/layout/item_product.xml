@@ -3,15 +3,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="6dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="3dp"
+    app:cardBackgroundColor="@color/colorWhite"
     android:foreground="?android:attr/selectableItemBackground">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="12dp">
+        android:padding="12dp"
+        android:background="@drawable/bg_product_shadow">
 
         <!-- Badge -->
         <TextView
@@ -24,33 +26,37 @@
             android:textSize="10sp"
             android:textStyle="bold"
             android:background="@drawable/badge_new"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="4dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
             android:visibility="gone" />
 
         <!-- Product Image -->
         <ImageView
             android:id="@+id/ivProduct"
             android:layout_width="match_parent"
-            android:layout_height="140dp"
+            android:layout_height="160dp"
             android:layout_below="@id/tvBadge"
             android:layout_marginTop="4dp"
             android:scaleType="centerCrop"
-            android:background="@color/colorBackground" />
+            android:background="@color/colorBackground"
+            android:contentDescription="Product image" />
 
         <!-- Favorite Icon -->
         <ImageView
             android:id="@+id/ivFavorite"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:layout_alignParentEnd="true"
             android:layout_alignBottom="@id/ivProduct"
-            android:layout_marginEnd="8dp"
-            android:layout_marginBottom="8dp"
-            android:padding="6dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="10dp"
+            android:padding="8dp"
             android:src="@drawable/ic_favorite_border"
             android:background="@drawable/bg_circle_white"
-            android:elevation="4dp" />
+            android:elevation="6dp"
+            android:contentDescription="Add to favorites" />
 
         <!-- Product Name -->
         <TextView
@@ -58,13 +64,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/ivProduct"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="14dp"
             android:text="Product Name"
-            android:textSize="14sp"
+            android:textSize="15sp"
             android:textColor="@color/colorTextPrimary"
             android:textStyle="bold"
             android:maxLines="2"
-            android:ellipsize="end" />
+            android:ellipsize="end"
+            android:lineSpacingExtra="2dp" />
 
         <!-- Price -->
         <TextView
@@ -72,11 +79,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/tvName"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="10dp"
             android:text="100.000đ"
-            android:textSize="16sp"
+            android:textSize="18sp"
             android:textColor="@color/colorAccent"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:letterSpacing="0.02" />
 
         <!-- Stock (Hidden - keep for reference in adapter) -->
         <TextView
@@ -93,17 +101,17 @@
         <!-- Add to Cart Button -->
         <ImageButton
             android:id="@+id/btnAddToCart"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
             android:layout_alignParentEnd="true"
             android:layout_below="@id/tvPrice"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="10dp"
             android:src="@drawable/ic_add_shopping_cart"
             android:background="@drawable/bg_circle_primary"
-            android:padding="8dp"
+            android:padding="10dp"
             android:tint="@color/colorWhite"
             android:contentDescription="Thêm vào giỏ hàng"
-            android:elevation="2dp" />
+            android:elevation="4dp" />
 
     </RelativeLayout>
 </androidx.cardview.widget.CardView>

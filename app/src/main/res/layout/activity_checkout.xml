@@ -32,8 +32,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="2dp">
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@color/colorWhite">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -62,11 +63,15 @@
                     <EditText
                         android:id="@+id/etEmail"
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
+                        android:layout_height="52dp"
                         android:hint="Email"
                         android:inputType="textEmailAddress"
-                        android:background="@drawable/bg_edittext"
-                        android:paddingHorizontal="12dp"
+                        android:background="@drawable/bg_edittext_modern"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:textSize="15sp"
+                        android:textColor="@color/colorTextPrimary"
+                        android:textColorHint="#9CA3AF"
                         android:layout_marginBottom="12dp" />
 
                     <!-- Họ và tên -->
@@ -81,11 +86,15 @@
                     <EditText
                         android:id="@+id/etFullName"
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
+                        android:layout_height="52dp"
                         android:hint="Họ và tên"
                         android:inputType="textPersonName"
-                        android:background="@drawable/bg_edittext"
-                        android:paddingHorizontal="12dp"
+                        android:background="@drawable/bg_edittext_modern"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:textSize="15sp"
+                        android:textColor="@color/colorTextPrimary"
+                        android:textColorHint="#9CA3AF"
                         android:layout_marginBottom="12dp" />
 
                     <!-- Số điện thoại -->
@@ -117,8 +126,12 @@
                             android:layout_weight="1"
                             android:hint="Số điện thoại"
                             android:inputType="phone"
-                            android:background="@drawable/bg_edittext"
-                            android:paddingHorizontal="12dp" />
+                            android:background="@drawable/bg_edittext_modern"
+                            android:paddingStart="16dp"
+                            android:paddingEnd="16dp"
+                            android:textSize="15sp"
+                            android:textColor="@color/colorTextPrimary"
+                            android:textColorHint="#9CA3AF" />
 
                     </LinearLayout>
 
@@ -134,11 +147,15 @@
                     <EditText
                         android:id="@+id/etAddress"
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
+                        android:layout_height="52dp"
                         android:hint="Địa chỉ"
                         android:inputType="textPostalAddress"
-                        android:background="@drawable/bg_edittext"
-                        android:paddingHorizontal="12dp"
+                        android:background="@drawable/bg_edittext_modern"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:textSize="15sp"
+                        android:textColor="@color/colorTextPrimary"
+                        android:textColorHint="#9CA3AF"
                         android:layout_marginBottom="12dp" />
 
                     <!-- Tỉnh thành -->
@@ -201,12 +218,15 @@
                     <EditText
                         android:id="@+id/etNote"
                         android:layout_width="match_parent"
-                        android:layout_height="80dp"
+                        android:layout_height="90dp"
                         android:hint="Ghi chú (tùy chọn)"
                         android:inputType="textMultiLine"
                         android:gravity="top|start"
-                        android:background="@drawable/bg_edittext"
-                        android:padding="12dp" />
+                        android:background="@drawable/bg_edittext_modern"
+                        android:padding="16dp"
+                        android:textSize="15sp"
+                        android:textColor="@color/colorTextPrimary"
+                        android:textColorHint="#9CA3AF" />
 
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -216,8 +236,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="2dp">
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@color/colorWhite">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -252,8 +273,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="2dp">
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@color/colorWhite">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -328,7 +350,9 @@
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="@color/colorWhite"
-            android:background="@drawable/bg_button_primary" />
+            android:letterSpacing="0.05"
+            android:background="@drawable/bg_button_modern"
+            android:elevation="6dp" />
 
     </LinearLayout>
 

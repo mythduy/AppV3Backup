@@ -2,7 +2,6 @@ package com.example.ecommerceapp;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.MenuItem;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -44,12 +43,17 @@ public class CategoriesActivity extends AppCompatActivity {
     private void setupToolbar() {
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle("Danh mục sản phẩm");
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
         }
     }
 
     private void setupRecyclerView() {
-        rvCategories.setLayoutManager(new GridLayoutManager(this, 2));
+        GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
+        rvCategories.setLayoutManager(layoutManager);
+        rvCategories.setHasFixedSize(false);
+        rvCategories.setNestedScrollingEnabled(false);
+        
         categoryAdapter = new CategoryGridAdapter(this, category -> {
             Intent intent = new Intent(CategoriesActivity.this, CategoryProductsActivity.class);
             intent.putExtra("category_name", category);
@@ -64,19 +68,22 @@ public class CategoriesActivity extends AppCompatActivity {
             int id = item.getItemId();
 
             if (id == R.id.nav_home) {
-                startActivity(new Intent(CategoriesActivity.this, MainActivity.class));
+                Intent intent = new Intent(CategoriesActivity.this, MainActivity.class);
+                startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
                 finish();
                 return true;
             } else if (id == R.id.nav_categories) {
                 return true;
             } else if (id == R.id.nav_cart) {
-                startActivity(new Intent(CategoriesActivity.this, CartActivity.class));
-                return true;
-            } else if (id == R.id.nav_orders) {
-                startActivity(new Intent(CategoriesActivity.this, OrderHistoryActivity.class));
+                Intent intent = new Intent(CategoriesActivity.this, CartActivity.class);
+                startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
                 return true;
             } else if (id == R.id.nav_profile) {
-                startActivity(new Intent(CategoriesActivity.this, ProfileActivity.class));
+                Intent intent = new Intent(CategoriesActivity.this, ProfileActivity.class);
+                startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
                 return true;
             }
 
@@ -94,14 +101,11 @@ public class CategoriesActivity extends AppCompatActivity {
         }
         
         categoryAdapter.updateCategories(categories, categoryCount);
+        
+        // Đảm bảo RecyclerView được đo lại sau khi load data
+        rvCategories.post(() -> {
+            rvCategories.requestLayout();
+        });
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
 }

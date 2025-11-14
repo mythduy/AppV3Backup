@@ -71,6 +71,13 @@ public class MainActivity extends AppCompatActivity {
         rvCategories = findViewById(R.id.rvCategories);
         rvProducts = findViewById(R.id.rvProducts);
         bottomNav = findViewById(R.id.bottomNav);
+        
+        // Setup "Xem tất cả" button
+        findViewById(R.id.tvViewAllCategories).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, CategoriesActivity.class);
+            startActivity(intent);
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        });
     }
 
     private void setupToolbar() {
@@ -158,33 +165,34 @@ public class MainActivity extends AppCompatActivity {
             if (id == R.id.nav_home) {
                 return true;
             } else if (id == R.id.nav_categories) {
-                startActivity(new Intent(MainActivity.this, CategoriesActivity.class));
+                Intent intent = new Intent(MainActivity.this, CategoriesActivity.class);
+                startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
                 return true;
             } else if (id == R.id.nav_cart) {
                 // Kiểm tra đăng nhập khi vào giỏ hàng
                 if (userId == -1) {
                     Toast.makeText(this, "Vui lòng đăng nhập để xem giỏ hàng", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(MainActivity.this, LoginActivity.class));
+                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                    startActivity(intent);
+                    overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
                 } else {
-                    startActivity(new Intent(MainActivity.this, CartActivity.class));
-                }
-                return true;
-            } else if (id == R.id.nav_orders) {
-                // Kiểm tra đăng nhập khi xem đơn hàng
-                if (userId == -1) {
-                    Toast.makeText(this, "Vui lòng đăng nhập để xem đơn hàng", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(MainActivity.this, LoginActivity.class));
-                } else {
-                    startActivity(new Intent(MainActivity.this, OrderHistoryActivity.class));
+                    Intent intent = new Intent(MainActivity.this, CartActivity.class);
+                    startActivity(intent);
+                    overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
                 }
                 return true;
             } else if (id == R.id.nav_profile) {
                 // Kiểm tra đăng nhập khi vào trang cá nhân
                 if (userId == -1) {
                     Toast.makeText(this, "Vui lòng đăng nhập", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(MainActivity.this, LoginActivity.class));
+                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                    startActivity(intent);
+                    overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
                 } else {
-                    startActivity(new Intent(MainActivity.this, ProfileActivity.class));
+                    Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
+                    startActivity(intent);
+                    overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
                 }
                 return true;
             }

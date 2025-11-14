@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_login_gradient">
@@ -34,8 +35,8 @@
         android:layout_marginRight="24dp"
         android:layout_marginTop="20dp"
         android:background="@drawable/bg_card_white"
-        android:elevation="8dp"
-        android:radius="24dp">
+        app:cardCornerRadius="28dp"
+        app:cardElevation="12dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -46,40 +47,52 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="LOGIN"
-                    android:textColor="#0D47A1"
+                    android:text="Welcome Back"
+                    android:textColor="@color/text_dark"
                     android:textSize="28sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="8dp" />            <!-- Username Field -->
+                    android:layout_marginBottom="4dp" />
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Login to continue shopping"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="24dp" />
+                    
+            <!-- Username Field -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Username"
-                android:textColor="#0D47A1"
+                android:textColor="@color/text_dark"
                 android:textSize="12sp"
-                android:layout_marginTop="24dp"
+                android:textStyle="bold"
                 android:layout_marginBottom="8dp" />
 
             <EditText
                 android:id="@+id/etUsername"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:background="@drawable/bg_input_field"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_edittext_modern"
                 android:hint="example@email.com"
-                android:textColorHint="#BDBDBD"
+                android:textColorHint="#9CA3AF"
                 android:inputType="text"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:textSize="14sp" />
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
+                android:textSize="15sp"
+                android:textColor="@color/colorTextPrimary" />
 
             <!-- Password Field -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Password"
-                android:textColor="#0D47A1"
+                android:textColor="@color/text_dark"
                 android:textSize="12sp"
-                android:layout_marginTop="20dp"
+                android:textStyle="bold"
+                android:layout_marginTop="16dp"
                 android:layout_marginBottom="8dp" />
 
             <RelativeLayout
@@ -90,28 +103,102 @@
                     android:id="@+id/etPassword"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="@drawable/bg_input_field"
+                    android:background="@drawable/bg_edittext_modern"
                     android:hint="••••••••"
-                    android:textColorHint="#BDBDBD"
+                    android:textColorHint="#9CA3AF"
                     android:inputType="textPassword"
-                    android:paddingLeft="16dp"
-                    android:paddingRight="48dp"
-                    android:textSize="14sp" />
+                    android:paddingStart="18dp"
+                    android:paddingEnd="48dp"
+                    android:textSize="15sp"
+                    android:textColor="@color/colorTextPrimary" />
 
             </RelativeLayout>
+
+            <!-- Remember Me -->
+            <CheckBox
+                android:id="@+id/cbRememberMe"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Remember me"
+                android:textSize="13sp"
+                android:layout_marginTop="12dp"
+                android:buttonTint="@color/colorPrimary" />
 
             <!-- Login Button -->
             <Button
                 android:id="@+id/btnLogin"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_marginTop="32dp"
-                android:background="@drawable/bg_button_blue"
-                android:text="LOGIN"
+                android:layout_height="56dp"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/bg_button_modern"
+                android:text="Đăng nhập"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:elevation="4dp" />
+                android:letterSpacing="0.05"
+                android:elevation="6dp" />
+                
+            <!-- Divider -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="20dp">
+                
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="@color/gray_300" />
+                    
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" or "
+                    android:textSize="13sp"
+                    android:textColor="@color/text_secondary"
+                    android:paddingHorizontal="12dp" />
+                    
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="@color/gray_300" />
+            </LinearLayout>
+            
+            <!-- Social Login Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="20dp">
+                
+                <ImageView
+                    android:id="@+id/btnGoogleLogin"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@android:drawable/ic_menu_search"
+                    android:background="@drawable/bg_circle_white"
+                    android:padding="12dp"
+                    android:layout_marginEnd="16dp"
+                    android:elevation="2dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+                    
+                <ImageView
+                    android:id="@+id/btnFacebookLogin"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@android:drawable/ic_menu_share"
+                    android:background="@drawable/bg_circle_white"
+                    android:padding="12dp"
+                    android:elevation="2dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+            </LinearLayout>
 
             <!-- Register Link -->
             <TextView
@@ -119,10 +206,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginTop="24dp"
                 android:text="Don't have an account? Sign Up"
-                android:textColor="#1565C0"
-                android:textSize="13sp" />
+                android:textColor="@color/colorPrimary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
         </LinearLayout>
 

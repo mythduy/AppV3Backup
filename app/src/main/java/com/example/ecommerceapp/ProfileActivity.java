@@ -14,6 +14,7 @@ import androidx.cardview.widget.CardView;
 import com.bumptech.glide.Glide;
 import com.example.ecommerceapp.database.DatabaseHelper;
 import com.example.ecommerceapp.models.User;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class ProfileActivity extends AppCompatActivity {
     private TextView tvFullName, tvEmail, tvAdminSection;
@@ -22,6 +23,7 @@ public class ProfileActivity extends AppCompatActivity {
     private LinearLayout btnAccountInfo, btnAddress, btnPayment;
     private LinearLayout btnManageProducts, btnManageCategories, btnManageOrders, btnManageUsers;
     private Button btnLogout;
+    private BottomNavigationView bottomNav;
     private DatabaseHelper dbHelper;
     private User currentUser;
     private int userId;
@@ -61,6 +63,7 @@ public class ProfileActivity extends AppCompatActivity {
             }
 
             initViews();
+            setupBottomNavigation();
             loadUserInfo();
             setupClickListeners();
         } catch (Exception e) {
@@ -75,6 +78,7 @@ public class ProfileActivity extends AppCompatActivity {
         tvEmail = findViewById(R.id.tvEmail);
         ivAvatar = findViewById(R.id.ivAvatar);
         btnEditProfile = findViewById(R.id.btnEditProfile);
+        bottomNav = findViewById(R.id.bottomNav);
         
         tvAdminSection = findViewById(R.id.tvAdminSection);
         cardAdminMenu = findViewById(R.id.cardAdminMenu);
@@ -89,6 +93,37 @@ public class ProfileActivity extends AppCompatActivity {
         btnManageUsers = findViewById(R.id.btnManageUsers);
         
         btnLogout = findViewById(R.id.btnLogout);
+    }
+
+    private void setupBottomNavigation() {
+        bottomNav.setSelectedItemId(R.id.nav_profile);
+        bottomNav.setOnItemSelectedListener(item -> {
+            int id = item.getItemId();
+
+            if (id == R.id.nav_home) {
+                Intent intent = new Intent(ProfileActivity.this, MainActivity.class);
+                startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                finish();
+                return true;
+            } else if (id == R.id.nav_categories) {
+                Intent intent = new Intent(ProfileActivity.this, CategoriesActivity.class);
+                startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                finish();
+                return true;
+            } else if (id == R.id.nav_cart) {
+                Intent intent = new Intent(ProfileActivity.this, CartActivity.class);
+                startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                finish();
+                return true;
+            } else if (id == R.id.nav_profile) {
+                return true;
+            }
+
+            return false;
+        });
     }
 
     private void loadUserInfo() {
