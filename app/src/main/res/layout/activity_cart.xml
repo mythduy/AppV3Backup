@@ -69,11 +69,51 @@
 
     </androidx.appcompat.widget.Toolbar>
 
+    <!-- Header với Checkbox chọn tất cả và nút xóa -->
+    <LinearLayout
+        android:id="@+id/layoutCartHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/toolbar"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:background="@color/colorWhite"
+        android:elevation="2dp"
+        android:gravity="center_vertical">
+
+        <CheckBox
+            android:id="@+id/cbSelectAll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chọn tất cả" />
+
+        <TextView
+            android:id="@+id/tvSelectedCount"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Chọn: 0"
+            android:textSize="14sp"
+            android:layout_marginStart="8dp"
+            android:textColor="@color/colorTextSecondary" />
+
+        <Button
+            android:id="@+id/btnDeleteSelected"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Xóa"
+            android:textSize="14sp"
+            android:backgroundTint="@color/colorRed"
+            android:textColor="@android:color/white"
+            style="?android:attr/buttonBarButtonStyle" />
+
+    </LinearLayout>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvCart"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/toolbar"
+        android:layout_below="@id/layoutCartHeader"
         android:layout_above="@id/layoutBottom"
         android:padding="8dp" />
 

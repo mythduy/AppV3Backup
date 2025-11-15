@@ -155,6 +155,10 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra("product_id", product.getId());
             startActivity(intent);
         });
+        
+        // Đăng ký listener để cập nhật badge giỏ hàng ngay lập tức
+        productAdapter.setOnCartUpdateListener(() -> updateCartBadge());
+        
         rvProducts.setAdapter(productAdapter);
     }
 
@@ -228,7 +232,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateCartBadge() {
         if (userId != -1) {
-            cartCount = dbHelper.getCartItems(userId).size();
+            cartCount = dbHelper.getCartItemCount(userId); // Sử dụng method mới đếm số sản phẩm, không phải tổng quantity
             BadgeDrawable badge = bottomNav.getOrCreateBadge(R.id.nav_cart);
             if (cartCount > 0) {
                 badge.setVisible(true);

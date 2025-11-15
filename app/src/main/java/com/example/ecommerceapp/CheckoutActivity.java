@@ -45,6 +45,7 @@ public class CheckoutActivity extends AppCompatActivity {
     private Button btnPlaceOrder;
     private DatabaseHelper dbHelper;
     private int userId;
+    private ArrayList<Integer> selectedCartIds; // Danh sách ID cart items được chọn
     
     // API Service
     private ProvinceApiService apiService;
@@ -66,6 +67,14 @@ public class CheckoutActivity extends AppCompatActivity {
 
         SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         userId = prefs.getInt("user_id", -1);
+
+        // Nhận danh sách cart items đã chọn
+        selectedCartIds = getIntent().getIntegerArrayListExtra("selected_cart_ids");
+        if (selectedCartIds == null || selectedCartIds.isEmpty()) {
+            Toast.makeText(this, "Không có sản phẩm nào được chọn", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
 
         dbHelper = new DatabaseHelper(this);
         apiService = ApiClient.getProvinceApiService();
@@ -255,11 +264,16 @@ public class CheckoutActivity extends AppCompatActivity {
     }
 
     private void calculateTotal() {
-        List<CartItem> cartItems = dbHelper.getCartItems(userId);
+        List<CartItem> allCartItems = dbHelper.getCartItems(userId);
         double total = 0;
-        for (CartItem item : cartItems) {
-            total += item.getTotalPrice();
+        
+        // Chỉ tính tổng cho các sản phẩm đã chọn
+        for (CartItem item : allCartItems) {
+            if (selectedCartIds.contains(item.getId())) {
+                total += item.getTotalPrice();
+            }
         }
+        
         tvTotal.setText("Tổng thanh toán: " + formatPrice(total));
     }
 
@@ -294,14 +308,23 @@ public class CheckoutActivity extends AppCompatActivity {
             paymentMethod = "COD";
         }
 
-        List<CartItem> cartItems = dbHelper.getCartItems(userId);
-        if (cartItems.isEmpty()) {
-            Toast.makeText(this, "Giỏ hàng trống", Toast.LENGTH_SHORT).show();
+        List<CartItem> allCartItems = dbHelper.getCartItems(userId);
+        
+        // Lọc chỉ lấy các sản phẩm đã chọn
+        List<CartItem> selectedCartItems = new ArrayList<>();
+        for (CartItem item : allCartItems) {
+            if (selectedCartIds.contains(item.getId())) {
+                selectedCartItems.add(item);
+            }
+        }
+        
+        if (selectedCartItems.isEmpty()) {
+            Toast.makeText(this, "Không có sản phẩm nào được chọn", Toast.LENGTH_SHORT).show();
             return;
         }
 
         double totalAmount = 0;
-        for (CartItem item : cartItems) {
+        for (CartItem item : selectedCartItems) {
             totalAmount += item.getTotalPrice();
         }
 
@@ -312,7 +335,7 @@ public class CheckoutActivity extends AppCompatActivity {
         Order order = new Order(0, userId, orderDate, totalAmount,
                 "Đang xử lý", fullAddress, paymentMethod);
 
-        long orderId = dbHelper.createOrder(order, cartItems);
+        long orderId = dbHelper.createOrder(order, selectedCartItems);
 
         if (orderId != -1) {
             Toast.makeText(this, "Đặt hàng thành công!", Toast.LENGTH_SHORT).show();

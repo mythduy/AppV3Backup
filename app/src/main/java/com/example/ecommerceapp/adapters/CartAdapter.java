@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
@@ -25,6 +26,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
 
     public interface OnCartUpdateListener {
         void onCartUpdated();
+        void onSelectionChanged();
     }
 
     public CartAdapter(Context context, DatabaseHelper dbHelper, OnCartUpdateListener listener) {
@@ -56,13 +58,19 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         notifyDataSetChanged();
     }
 
+    public List<CartItem> getCartItems() {
+        return cartItems;
+    }
+
     class CartViewHolder extends RecyclerView.ViewHolder {
+        CheckBox cbSelect;
         ImageView ivProduct;
         TextView tvName, tvPrice, tvQuantity, tvTotal;
         Button btnMinus, btnPlus, btnRemove;
 
         CartViewHolder(@NonNull View itemView) {
             super(itemView);
+            cbSelect = itemView.findViewById(R.id.cbSelect);
             ivProduct = itemView.findViewById(R.id.ivProduct);
             tvName = itemView.findViewById(R.id.tvName);
             tvPrice = itemView.findViewById(R.id.tvPrice);
@@ -79,6 +87,15 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
             tvQuantity.setText(String.valueOf(item.getQuantity()));
             tvTotal.setText(formatPrice(item.getTotalPrice()));
             ivProduct.setImageResource(R.drawable.ic_product_placeholder);
+            cbSelect.setChecked(item.isSelected());
+
+            // Checkbox listener
+            cbSelect.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                item.setSelected(isChecked);
+                if (listener != null) {
+                    listener.onSelectionChanged();
+                }
+            });
 
             btnMinus.setOnClickListener(v -> {
                 int newQty = item.getQuantity() - 1;

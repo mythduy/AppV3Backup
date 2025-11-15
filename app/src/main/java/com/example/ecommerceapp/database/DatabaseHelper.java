@@ -14,7 +14,7 @@ import java.util.Locale;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "ecommerce.db";
-    private static final int DATABASE_VERSION = 4; // Increased version for avatar and location
+    private static final int DATABASE_VERSION = 5; // Increased version for wishlist
 
     // Tables
     private static final String TABLE_USERS = "users";
@@ -22,6 +22,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TABLE_CART = "cart";
     private static final String TABLE_ORDERS = "orders";
     private static final String TABLE_ORDER_ITEMS = "order_items";
+    private static final String TABLE_WISHLIST = "wishlist";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -88,6 +89,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "FOREIGN KEY(product_id) REFERENCES products(id))";
         db.execSQL(createOrderItemsTable);
 
+        // Create Wishlist table
+        String createWishlistTable = "CREATE TABLE " + TABLE_WISHLIST + " (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "user_id INTEGER, " +
+                "product_id INTEGER, " +
+                "added_date TEXT, " +
+                "FOREIGN KEY(user_id) REFERENCES users(id), " +
+                "FOREIGN KEY(product_id) REFERENCES products(id))";
+        db.execSQL(createWishlistTable);
+
         // Insert sample products
         insertSampleProducts(db);
         
@@ -97,6 +108,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_WISHLIST);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_ORDER_ITEMS);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_ORDERS);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_CART);
@@ -785,5 +797,108 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.delete(TABLE_PRODUCTS, "category = ?", new String[]{category});
         
         return true;
+    }
+
+    // ==================== WISHLIST OPERATIONS ====================
+    
+    // Add to Wishlist
+    public long addToWishlist(int userId, int productId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        
+        // Check if already in wishlist
+        Cursor cursor = db.query(TABLE_WISHLIST, null,
+                "user_id=? AND product_id=?",
+                new String[]{String.valueOf(userId), String.valueOf(productId)},
+                null, null, null);
+        
+        if (cursor != null && cursor.moveToFirst()) {
+            cursor.close();
+            return -1; // Already exists
+        }
+        if (cursor != null) cursor.close();
+        
+        ContentValues values = new ContentValues();
+        values.put("user_id", userId);
+        values.put("product_id", productId);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        values.put("added_date", sdf.format(new Date()));
+        
+        return db.insert(TABLE_WISHLIST, null, values);
+    }
+    
+    // Remove from Wishlist
+    public boolean removeFromWishlist(int userId, int productId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        int rows = db.delete(TABLE_WISHLIST, "user_id=? AND product_id=?",
+                new String[]{String.valueOf(userId), String.valueOf(productId)});
+        return rows > 0;
+    }
+    
+    // Check if product is in wishlist
+    public boolean isInWishlist(int userId, int productId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_WISHLIST, null,
+                "user_id=? AND product_id=?",
+                new String[]{String.valueOf(userId), String.valueOf(productId)},
+                null, null, null);
+        
+        boolean exists = cursor != null && cursor.moveToFirst();
+        if (cursor != null) cursor.close();
+        return exists;
+    }
+    
+    // Get all wishlist items for user
+    public List<Product> getWishlistProducts(int userId) {
+        List<Product> products = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        
+        String query = "SELECT p.* FROM " + TABLE_PRODUCTS + " p " +
+                "INNER JOIN " + TABLE_WISHLIST + " w ON p.id = w.product_id " +
+                "WHERE w.user_id = ? " +
+                "ORDER BY w.added_date DESC";
+        
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(userId)});
+        
+        if (cursor.moveToFirst()) {
+            do {
+                Product product = new Product();
+                product.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+                product.setName(cursor.getString(cursor.getColumnIndexOrThrow("name")));
+                product.setDescription(cursor.getString(cursor.getColumnIndexOrThrow("description")));
+                product.setPrice(cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
+                product.setCategory(cursor.getString(cursor.getColumnIndexOrThrow("category")));
+                product.setStock(cursor.getInt(cursor.getColumnIndexOrThrow("stock")));
+                product.setImageUrl(cursor.getString(cursor.getColumnIndexOrThrow("image_url")));
+                products.add(product);
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return products;
+    }
+    
+    // Get wishlist count
+    public int getWishlistCount(int userId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_WISHLIST + " WHERE user_id = ?",
+                new String[]{String.valueOf(userId)});
+        int count = 0;
+        if (cursor.moveToFirst()) {
+            count = cursor.getInt(0);
+        }
+        cursor.close();
+        return count;
+    }
+    
+    // Get cart item count (số lượng sản phẩm, không phải tổng quantity)
+    public int getCartItemCount(int userId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_CART + " WHERE user_id = ?",
+                new String[]{String.valueOf(userId)});
+        int count = 0;
+        if (cursor.moveToFirst()) {
+            count = cursor.getInt(0);
+        }
+        cursor.close();
+        return count;
     }
 }

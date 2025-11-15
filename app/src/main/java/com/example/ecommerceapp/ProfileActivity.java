@@ -17,10 +17,10 @@ import com.example.ecommerceapp.models.User;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class ProfileActivity extends AppCompatActivity {
-    private TextView tvFullName, tvEmail, tvAdminSection;
+    private TextView tvFullName, tvEmail, tvAdminSection, tvWishlistCount;
     private ImageView ivAvatar, btnEditProfile;
     private CardView cardAdminMenu;
-    private LinearLayout btnAccountInfo, btnAddress, btnPayment;
+    private LinearLayout btnAccountInfo, btnAddress, btnPayment, btnWishlist;
     private LinearLayout btnManageProducts, btnManageCategories, btnManageOrders, btnManageUsers;
     private Button btnLogout;
     private BottomNavigationView bottomNav;
@@ -86,6 +86,8 @@ public class ProfileActivity extends AppCompatActivity {
         btnAccountInfo = findViewById(R.id.btnAccountInfo);
         btnAddress = findViewById(R.id.btnAddress);
         btnPayment = findViewById(R.id.btnPayment);
+        btnWishlist = findViewById(R.id.btnWishlist);
+        tvWishlistCount = findViewById(R.id.tvWishlistCount);
         
         btnManageProducts = findViewById(R.id.btnManageProducts);
         btnManageCategories = findViewById(R.id.btnManageCategories);
@@ -152,6 +154,12 @@ public class ProfileActivity extends AppCompatActivity {
                     cardAdminMenu.setVisibility(View.VISIBLE);
                 }
             }
+            
+            // Update wishlist count
+            int wishlistCount = dbHelper.getWishlistCount(userId);
+            if (tvWishlistCount != null) {
+                tvWishlistCount.setText(String.valueOf(wishlistCount));
+            }
         }
     }
 
@@ -187,6 +195,13 @@ public class ProfileActivity extends AppCompatActivity {
         if (btnPayment != null) {
             btnPayment.setOnClickListener(v -> {
                 Toast.makeText(this, "Tính năng đang phát triển", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        if (btnWishlist != null) {
+            btnWishlist.setOnClickListener(v -> {
+                Intent intent = new Intent(this, WishlistActivity.class);
+                startActivity(intent);
             });
         }
 

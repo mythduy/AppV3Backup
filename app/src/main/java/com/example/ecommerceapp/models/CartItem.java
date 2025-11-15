@@ -8,8 +8,11 @@ public class CartItem {
     private double productPrice;
     private int quantity;
     private String imageUrl;
+    private boolean isSelected; // Thêm trường để track trạng thái chọn
 
-    public CartItem() {}
+    public CartItem() {
+        this.isSelected = true; // Mặc định được chọn
+    }
 
     public CartItem(int id, int userId, int productId, String productName,
                     double productPrice, int quantity, String imageUrl) {
@@ -20,6 +23,7 @@ public class CartItem {
         this.productPrice = productPrice;
         this.quantity = quantity;
         this.imageUrl = imageUrl;
+        this.isSelected = true; // Mặc định được chọn
     }
 
     // Getters and Setters
@@ -43,6 +47,9 @@ public class CartItem {
 
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
+    public boolean isSelected() { return isSelected; }
+    public void setSelected(boolean selected) { isSelected = selected; }
 
     public double getTotalPrice() { return productPrice * quantity; }
 }
