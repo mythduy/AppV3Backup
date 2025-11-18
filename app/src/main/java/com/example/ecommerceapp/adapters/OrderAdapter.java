@@ -59,29 +59,69 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
     }
 
     class OrderViewHolder extends RecyclerView.ViewHolder {
-        TextView tvOrderId, tvDate, tvTotal, tvStatus, tvPayment;
+        TextView tvOrderId, tvDate, tvTotal, tvPayment;
+        com.google.android.material.chip.Chip chipStatus;
+        com.google.android.material.button.MaterialButton btnViewDetail;
 
         OrderViewHolder(@NonNull View itemView) {
             super(itemView);
             tvOrderId = itemView.findViewById(R.id.tvOrderId);
             tvDate = itemView.findViewById(R.id.tvDate);
             tvTotal = itemView.findViewById(R.id.tvTotal);
-            tvStatus = itemView.findViewById(R.id.tvStatus);
+            chipStatus = itemView.findViewById(R.id.chipStatus);
             tvPayment = itemView.findViewById(R.id.tvPayment);
+            btnViewDetail = itemView.findViewById(R.id.btnViewDetail);
         }
 
         void bind(Order order) {
             tvOrderId.setText("Đơn hàng #" + order.getId());
             tvDate.setText(order.getOrderDate());
             tvTotal.setText(formatPrice(order.getTotalAmount()));
-            tvStatus.setText(order.getStatus());
             tvPayment.setText("Thanh toán: " + order.getPaymentMethod());
 
+            // Set status chip với màu sắc khác nhau
+            chipStatus.setText(order.getStatus());
+            setStatusChipStyle(order.getStatus());
+
+            // Click listeners
             itemView.setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onOrderClick(order);
                 }
             });
+
+            btnViewDetail.setOnClickListener(v -> {
+                if (listener != null) {
+                    listener.onOrderClick(order);
+                }
+            });
+        }
+
+        void setStatusChipStyle(String status) {
+            int backgroundColor;
+            int textColor = context.getColor(android.R.color.white);
+
+            switch (status) {
+                case "Chờ xác nhận":
+                    backgroundColor = context.getColor(android.R.color.holo_orange_dark);
+                    break;
+                case "Đang giao hàng":
+                    backgroundColor = context.getColor(android.R.color.holo_blue_dark);
+                    break;
+                case "Hoàn thành":
+                    backgroundColor = context.getColor(android.R.color.holo_green_dark);
+                    break;
+                case "Đã hủy":
+                    backgroundColor = context.getColor(android.R.color.holo_red_dark);
+                    break;
+                default:
+                    backgroundColor = context.getColor(com.example.ecommerceapp.R.color.colorPrimary);
+                    break;
+            }
+
+            chipStatus.setChipBackgroundColorResource(android.R.color.transparent);
+            chipStatus.setChipBackgroundColor(android.content.res.ColorStateList.valueOf(backgroundColor));
+            chipStatus.setTextColor(textColor);
         }
 
         String formatPrice(double price) {

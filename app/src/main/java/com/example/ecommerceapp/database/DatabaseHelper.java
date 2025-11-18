@@ -176,6 +176,30 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.insert(TABLE_USERS, null, values);
     }
 
+    // Update product images - chỉ gọi 1 lần khi cần update
+    public void updateProductImages() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        
+        // Cập nhật hình ảnh cho từng sản phẩm
+        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_1.jpg' WHERE id = 1");
+        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_2.jpg' WHERE id = 2");
+        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_3.jpg' WHERE id = 3");
+        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_4.jpg' WHERE id = 4");
+        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_5.jpg' WHERE id = 5");
+        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_6.jpg' WHERE id = 6");
+        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_7.jpg' WHERE id = 7");
+        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_8.jpg' WHERE id = 8");
+        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_9.jpg' WHERE id = 9");
+        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_10.jpg' WHERE id = 10");
+        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_11.jpg' WHERE id = 11");
+        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_12.jpg' WHERE id = 12");
+        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_13.jpg' WHERE id = 13");
+        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_14.jpg' WHERE id = 14");
+        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_15.jpg' WHERE id = 15");
+        
+        db.close();
+    }
+
     // User operations
     public long registerUser(User user) {
         SQLiteDatabase db = this.getWritableDatabase();

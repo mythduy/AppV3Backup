@@ -5,10 +5,11 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
-import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
@@ -17,15 +18,21 @@ import com.example.ecommerceapp.adapters.CategoryAdapter;
 import com.example.ecommerceapp.adapters.ProductAdapter;
 import com.example.ecommerceapp.database.DatabaseHelper;
 import com.example.ecommerceapp.models.Product;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.badge.BadgeDrawable;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    private Toolbar toolbar;
+    private MaterialToolbar toolbar;
+    private SearchView searchView;
+    private android.widget.ImageView ivAppLogo;
+    private com.google.android.material.imageview.ShapeableImageView ivProfile;
+    private TextView tvCartBadge;
     private ViewPager2 vpBanner;
     private TabLayout tabLayout;
     private RecyclerView rvCategories, rvProducts;
@@ -46,7 +53,13 @@ public class MainActivity extends AppCompatActivity {
             userId = prefs.getInt("user_id", -1);
 
             // Không yêu cầu đăng nhập ngay, cho phép xem sản phẩm
+            
+            // XÓA DATABASE CŨ VÀ TẠO LẠI - CHỈ CHẠY 1 LẦN
+            // Sau khi chạy app 1 lần thành công, hãy comment lại 2 dòng này
+            this.deleteDatabase("ecommerce.db");
+            
             dbHelper = new DatabaseHelper(this);
+            dbHelper.updateProductImages();
 
             initViews();
             setupToolbar();
@@ -66,6 +79,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void initViews() {
         toolbar = findViewById(R.id.toolbar);
+        searchView = findViewById(R.id.searchView);
+        ivAppLogo = findViewById(R.id.ivAppLogo);
+        ivProfile = findViewById(R.id.ivProfile);
+        tvCartBadge = findViewById(R.id.tvCartBadge);
         vpBanner = findViewById(R.id.vpBanner);
         tabLayout = findViewById(R.id.tabLayout);
         rvCategories = findViewById(R.id.rvCategories);
@@ -78,6 +95,99 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         });
+        
+        // Setup app logo click - refresh trang
+        ivAppLogo.setOnClickListener(v -> {
+            refreshPage();
+        });
+        
+        // Setup profile avatar click
+        ivProfile.setOnClickListener(v -> {
+            if (userId == -1) {
+                Toast.makeText(this, "Vui lòng đăng nhập 🔐", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            } else {
+                // Hiển thị menu với giỏ hàng và profile
+                showProfileMenu();
+            }
+        });
+        
+        // Setup search view
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                searchProducts(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (newText.isEmpty()) {
+                    loadProducts("all");
+                } else {
+                    searchProducts(newText);
+                }
+                return true;
+            }
+        });
+    }
+    
+    private void refreshPage() {
+        // Clear search
+        searchView.setQuery("", false);
+        searchView.clearFocus();
+        
+        // Reset tab về đầu tiên
+        if (tabLayout.getTabCount() > 0) {
+            TabLayout.Tab firstTab = tabLayout.getTabAt(0);
+            if (firstTab != null) {
+                firstTab.select();
+            }
+        }
+        
+        // Reload products
+        loadProducts("new");
+        
+        // Scroll to top
+        if (rvProducts != null) {
+            rvProducts.smoothScrollToPosition(0);
+        }
+        
+        // Show feedback
+        Toast.makeText(this, "Đã làm mới 🔄", Toast.LENGTH_SHORT).show();
+    }
+    
+    private void showProfileMenu() {
+        // Tạo popup menu khi click vào avatar
+        android.widget.PopupMenu popup = new android.widget.PopupMenu(this, ivProfile);
+        popup.getMenuInflater().inflate(R.menu.profile_menu, popup.getMenu());
+        
+        popup.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
+            
+            if (id == R.id.action_cart) {
+                Intent intent = new Intent(this, CartActivity.class);
+                startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                return true;
+            } else if (id == R.id.action_orders) {
+                Intent intent = new Intent(this, OrderHistoryActivity.class);
+                startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                return true;
+            } else if (id == R.id.action_profile) {
+                Intent intent = new Intent(this, ProfileActivity.class);
+                startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                return true;
+            }
+            
+            return false;
+        });
+        
+        popup.show();
     }
 
     private void setupToolbar() {
@@ -225,6 +335,9 @@ public class MainActivity extends AppCompatActivity {
         productAdapter.updateProducts(products);
     }
 
+    // this.deleteDatabase("ecommerce.db");
+    // dbHelper.updateProductImages();
+
     private void loadProductsByCategory(String category) {
         List<Product> products = dbHelper.getProductsByCategory(category);
         productAdapter.updateProducts(products);
@@ -233,6 +346,8 @@ public class MainActivity extends AppCompatActivity {
     private void updateCartBadge() {
         if (userId != -1) {
             cartCount = dbHelper.getCartItemCount(userId); // Sử dụng method mới đếm số sản phẩm, không phải tổng quantity
+            
+            // Update badge in bottom navigation
             BadgeDrawable badge = bottomNav.getOrCreateBadge(R.id.nav_cart);
             if (cartCount > 0) {
                 badge.setVisible(true);
@@ -241,69 +356,29 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 badge.setVisible(false);
             }
+            
+            // Update badge in toolbar
+            if (cartCount > 0) {
+                tvCartBadge.setText(String.valueOf(cartCount));
+                tvCartBadge.setVisibility(View.VISIBLE);
+            } else {
+                tvCartBadge.setVisibility(View.GONE);
+            }
+        } else {
+            tvCartBadge.setVisibility(View.GONE);
         }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu, menu);
-
-        MenuItem searchItem = menu.findItem(R.id.action_search);
-        SearchView searchView = (SearchView) searchItem.getActionView();
-        searchView.setQueryHint("Tìm sản phẩm...");
-
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                searchProducts(query);
-                return true;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                if (newText.isEmpty()) {
-                    loadProducts("all");
-                } else {
-                    searchProducts(newText);
-                }
-                return true;
-            }
-        });
-
+        // No menu needed - using custom toolbar buttons
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == R.id.action_cart) {
-            startActivity(new Intent(this, CartActivity.class));
-            return true;
-        } else if (id == R.id.action_orders) {
-            startActivity(new Intent(this, OrderHistoryActivity.class));
-            return true;
-        } else if (id == R.id.action_profile) {
-            startActivity(new Intent(this, ProfileActivity.class));
-            return true;
-        } else if (id == R.id.action_logout) {
-            logout();
-            return true;
-        }
-
+        // No menu items - using custom toolbar buttons
         return super.onOptionsItemSelected(item);
-    }
-
-    private void logout() {
-        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.clear();
-        editor.apply();
-
-        Intent intent = new Intent(this, LoginActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        finish();
     }
 
     private void searchProducts(String query) {
