@@ -78,7 +78,46 @@ public class CategoryGridAdapter extends RecyclerView.Adapter<CategoryGridAdapte
                     ? categoryCount.get(category) : 0;
             tvProductCount.setText(count + " sản phẩm");
             
-            ivCategory.setImageResource(getCategoryIcon(category));
+            // Load category image from assets
+            try {
+                String fileName = getCategoryFileName(category);
+                if (fileName != null) {
+                    java.io.InputStream is = context.getAssets().open("images/categories/" + fileName);
+                    android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(is);
+                    ivCategory.setImageBitmap(bitmap);
+                    is.close();
+                } else {
+                    ivCategory.setImageResource(getCategoryIcon(category));
+                }
+            } catch (Exception e) {
+                ivCategory.setImageResource(getCategoryIcon(category));
+            }
+        }
+        
+        private String getCategoryFileName(String category) {
+            switch (category) {
+                case "Vi điều khiển":
+                    return "category_microcontroller.jpg";
+                case "Máy tính nhúng":
+                    return "category_embedded.jpg";
+                case "Cảm biến":
+                    return "category_sensor.jpg";
+                case "Module":
+                case "Module WiFi":
+                    return "category_module.jpg";
+                case "LED":
+                    return "category_led.jpg";
+                case "Màn hình":
+                    return "category_display.jpg";
+                case "Động cơ":
+                    return "category_motor.jpg";
+                case "Linh kiện":
+                    return "category_component.jpg";
+                case "Nguồn":
+                    return "category_power.jpg";
+                default:
+                    return null;
+            }
         }
 
         private int getCategoryIcon(String category) {

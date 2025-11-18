@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="4dp">
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="8dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="2dp"
+    app:strokeWidth="0dp"
+    app:cardBackgroundColor="@color/colorWhite"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -13,43 +21,143 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <TextView
-            android:id="@+id/tvOrderId"
-            android:layout_width="wrap_content"
+        <!-- Header: Order ID & Status -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/tvOrderId"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Đơn hàng #12345"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="@color/colorTextPrimary"
+                android:fontFamily="sans-serif-medium" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="Đang xử lý"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                app:chipBackgroundColor="@color/colorPrimary"
+                app:chipStrokeWidth="0dp"
+                app:chipMinHeight="32dp"
+                style="@style/Widget.Material3.Chip.Assist" />
+
+        </LinearLayout>
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginBottom="12dp"
+            android:background="@color/colorTextSecondary"
+            android:alpha="0.1" />
+
+        <!-- Date & Time -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_orders"
+                android:tint="@color/colorTextSecondary"
+                android:contentDescription="Date Icon" />
+
+            <TextView
+                android:id="@+id/tvDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="22/11/2024 14:30"
+                android:textSize="14sp"
+                android:textColor="@color/colorTextSecondary" />
+
+        </LinearLayout>
+
+        <!-- Payment Method -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_cart"
+                android:tint="@color/colorTextSecondary"
+                android:contentDescription="Payment Icon" />
+
+            <TextView
+                android:id="@+id/tvPayment"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Thanh toán: COD"
+                android:textSize="14sp"
+                android:textColor="@color/colorTextSecondary" />
+
+        </LinearLayout>
+
+        <!-- Total Amount -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="12dp"
+            android:background="@drawable/bg_info_light">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Tổng tiền:"
+                android:textSize="15sp"
+                android:textColor="@color/colorTextPrimary"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvTotal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1.250.000₫"
+                android:textSize="18sp"
+                android:textColor="@color/colorAccent"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium" />
+
+        </LinearLayout>
+
+        <!-- Action Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnViewDetail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="Xem chi tiết"
+            android:textSize="15sp"
             android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
-
-        <TextView
-            android:id="@+id/tvDate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:layout_marginBottom="4dp" />
-
-        <TextView
-            android:id="@+id/tvTotal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:textColor="@color/colorAccent"
-            android:textStyle="bold"
-            android:layout_marginBottom="4dp" />
-
-        <TextView
-            android:id="@+id/tvStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="4dp" />
-
-        <TextView
-            android:id="@+id/tvPayment"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="14sp" />
+            app:cornerRadius="12dp"
+            app:strokeWidth="2dp"
+            app:strokeColor="@color/colorPrimary"
+            style="@style/Widget.Material3.Button.OutlinedButton" />
 
     </LinearLayout>
-</androidx.cardview.widget.CardView>
+
+</com.google.android.material.card.MaterialCardView>

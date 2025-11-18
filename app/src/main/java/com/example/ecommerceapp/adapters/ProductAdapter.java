@@ -13,6 +13,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.ecommerceapp.LoginActivity;
 import com.example.ecommerceapp.R;
 import com.example.ecommerceapp.database.DatabaseHelper;
@@ -134,7 +136,18 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                 tvBadge.setVisibility(View.GONE);
             }
 
-            ivProduct.setImageResource(R.drawable.ic_product_placeholder);
+            // Load product image with Glide
+            if (product.getImageUrl() != null && !product.getImageUrl().isEmpty()) {
+                Glide.with(context)
+                    .load(product.getImageUrl())
+                    .placeholder(R.drawable.ic_product_placeholder)
+                    .error(R.drawable.ic_product_placeholder)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .centerCrop()
+                    .into(ivProduct);
+            } else {
+                ivProduct.setImageResource(R.drawable.ic_product_placeholder);
+            }
             
             // Update wishlist icon
             SharedPreferences prefs = context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);

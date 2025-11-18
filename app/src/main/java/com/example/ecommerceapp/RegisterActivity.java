@@ -1,19 +1,29 @@
 package com.example.ecommerceapp;
 
 import android.os.Bundle;
-import android.widget.Button;
-import android.widget.EditText;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.ecommerceapp.database.DatabaseHelper;
 import com.example.ecommerceapp.models.User;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.checkbox.MaterialCheckBox;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 public class RegisterActivity extends AppCompatActivity {
-    private EditText etUsername, etEmail, etPassword, etConfirmPassword,
+    private TextInputEditText etUsername, etEmail, etPassword, etConfirmPassword,
             etFullName, etPhone, etAddress;
-    private Button btnRegister;
+    private MaterialButton btnRegister;
     private TextView tvLogin;
+    private MaterialCheckBox cbTerms;
+    private MaterialCardView btnGoogleSignup, btnFacebookSignup;
     private DatabaseHelper dbHelper;
 
     @Override
@@ -23,6 +33,7 @@ public class RegisterActivity extends AppCompatActivity {
 
         dbHelper = new DatabaseHelper(this);
 
+        // Initialize Material Components
         etUsername = findViewById(R.id.etUsername);
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
@@ -32,11 +43,54 @@ public class RegisterActivity extends AppCompatActivity {
         etAddress = findViewById(R.id.etAddress);
         btnRegister = findViewById(R.id.btnRegister);
         tvLogin = findViewById(R.id.tvLogin);
+        cbTerms = findViewById(R.id.cbTerms);
+        btnGoogleSignup = findViewById(R.id.btnGoogleSignup);
+        btnFacebookSignup = findViewById(R.id.btnFacebookSignup);
 
+        // Apply animations
+        applyAnimations();
+
+        // Add password strength indicator
+        addPasswordValidation();
+
+        // Set up click listeners
         btnRegister.setOnClickListener(v -> register());
         
         tvLogin.setOnClickListener(v -> {
-            finish(); // Quay lại màn hình Login
+            finish();
+            overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+        });
+
+        btnGoogleSignup.setOnClickListener(v -> {
+            Toast.makeText(this, "Google Signup coming soon!", Toast.LENGTH_SHORT).show();
+        });
+
+        btnFacebookSignup.setOnClickListener(v -> {
+            Toast.makeText(this, "Facebook Signup coming soon!", Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void applyAnimations() {
+        View headerSection = findViewById(R.id.headerSection);
+        Animation fadeIn = AnimationUtils.loadAnimation(this, R.anim.fade_in_scale);
+        headerSection.startAnimation(fadeIn);
+    }
+
+    private void addPasswordValidation() {
+        etPassword.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Real-time password validation can be added here
+                if (s.length() > 0 && s.length() < 6) {
+                    // You can show error in TextInputLayout
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
         });
     }
 
@@ -49,26 +103,67 @@ public class RegisterActivity extends AppCompatActivity {
         String phone = etPhone.getText().toString().trim();
         String address = etAddress.getText().toString().trim();
 
+        // Validate all fields
         if (username.isEmpty() || email.isEmpty() || password.isEmpty() ||
                 fullName.isEmpty() || phone.isEmpty() || address.isEmpty()) {
-            Toast.makeText(this, "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "⚠️ Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+            Animation shake = AnimationUtils.loadAnimation(this, android.R.anim.fade_in);
+            btnRegister.startAnimation(shake);
             return;
         }
 
+        // Validate email format
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            Toast.makeText(this, "⚠️ Email không hợp lệ", Toast.LENGTH_SHORT).show();
+            etEmail.requestFocus();
+            return;
+        }
+
+        // Validate password length
+        if (password.length() < 6) {
+            Toast.makeText(this, "⚠️ Mật khẩu phải có ít nhất 6 ký tự", Toast.LENGTH_SHORT).show();
+            etPassword.requestFocus();
+            return;
+        }
+
+        // Validate password match
         if (!password.equals(confirmPassword)) {
-            Toast.makeText(this, "Mật khẩu xác nhận không khớp", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "⚠️ Mật khẩu xác nhận không khớp", Toast.LENGTH_SHORT).show();
+            etConfirmPassword.requestFocus();
+            Animation shake = AnimationUtils.loadAnimation(this, android.R.anim.fade_in);
+            etConfirmPassword.startAnimation(shake);
             return;
         }
 
+        // Validate terms acceptance
+        if (!cbTerms.isChecked()) {
+            Toast.makeText(this, "⚠️ Vui lòng đồng ý với điều khoản sử dụng", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Show loading state
+        btnRegister.setEnabled(false);
+        btnRegister.setText("Đang đăng ký...");
+
+        // Perform registration
         User user = new User(0, username, email, password, fullName, phone, address);
         long result = dbHelper.registerUser(user);
 
         if (result != -1) {
-            Toast.makeText(this, "Đăng ký thành công!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "✅ Đăng ký thành công! Vui lòng đăng nhập", Toast.LENGTH_LONG).show();
+            
+            // Smooth transition back to login
             finish();
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         } else {
-            Toast.makeText(this, "Đăng ký thất bại. Tên đăng nhập có thể đã tồn tại",
-                    Toast.LENGTH_SHORT).show();
+            btnRegister.setEnabled(true);
+            btnRegister.setText("Sign Up");
+            Toast.makeText(this, "❌ Đăng ký thất bại. Tên đăng nhập hoặc email đã tồn tại",
+                    Toast.LENGTH_LONG).show();
+            
+            // Shake animation for error
+            Animation shake = AnimationUtils.loadAnimation(this, android.R.anim.fade_in);
+            btnRegister.startAnimation(shake);
         }
     }
 }

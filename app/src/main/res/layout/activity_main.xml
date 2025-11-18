@@ -7,37 +7,122 @@
     android:background="@color/colorBackground">
 
     <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+        android:elevation="4dp"
+        android:background="@color/colorWhite"
+        android:theme="@style/ThemeOverlay.Material3.Light">
 
-        <androidx.appcompat.widget.Toolbar
+        <!-- Main Toolbar with Menu, Search, and Profile -->
+        <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/colorPrimary"
-            android:elevation="4dp"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+            android:background="@color/colorWhite"
+            android:elevation="0dp"
+            app:titleTextColor="@color/colorTextPrimary"
+            app:popupTheme="@style/ThemeOverlay.Material3.Light"
+            app:layout_scrollFlags="scroll|enterAlways|snap">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:paddingEnd="8dp">
 
+                <!-- App Logo Icon -->
                 <ImageView
-                    android:layout_width="120dp"
-                    android:layout_height="35dp"
-                    android:scaleType="fitStart"
-                    android:src="@drawable/logo_white" />
+                    android:id="@+id/ivAppLogo"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="12dp"
+                    android:src="@mipmap/ic_launcher"
+                    android:scaleType="fitCenter"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="App Logo - Refresh" />
 
-                <View
+                <!-- Search Bar Container -->
+                <com.google.android.material.card.MaterialCardView
                     android:layout_width="0dp"
-                    android:layout_height="1dp"
-                    android:layout_weight="1" />
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    app:cardCornerRadius="22dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="#F5F5F5"
+                    app:strokeWidth="0dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="12dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_search"
+                            android:tint="@color/colorTextSecondary"
+                            android:contentDescription="Search Icon" />
+
+                        <androidx.appcompat.widget.SearchView
+                            android:id="@+id/searchView"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:background="@android:color/transparent"
+                            app:queryHint="Search News"
+                            app:iconifiedByDefault="false"
+                            app:searchIcon="@null"
+                            app:closeIcon="@null"
+                            app:queryBackground="@android:color/transparent" />
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Profile Avatar with Cart Badge -->
+                <FrameLayout
+                    android:layout_width="44dp"
+                    android:layout_height="44dp">
+
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/ivProfile"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_avatar_placeholder"
+                        android:scaleType="centerCrop"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        app:shapeAppearanceOverlay="@style/CircleImageView"
+                        android:contentDescription="Profile" />
+
+                    <!-- Cart Badge on Profile -->
+                    <TextView
+                        android:id="@+id/tvCartBadge"
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_gravity="top|end"
+                        android:background="@drawable/bg_cart_badge"
+                        android:gravity="center"
+                        android:text="0"
+                        android:textColor="@color/colorWhite"
+                        android:textSize="9sp"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+                </FrameLayout>
 
             </LinearLayout>
-        </androidx.appcompat.widget.Toolbar>
+        </com.google.android.material.appbar.MaterialToolbar>
 
     </com.google.android.material.appbar.AppBarLayout>
 

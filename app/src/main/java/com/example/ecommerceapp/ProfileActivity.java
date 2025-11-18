@@ -18,11 +18,13 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class ProfileActivity extends AppCompatActivity {
     private TextView tvFullName, tvEmail, tvAdminSection, tvWishlistCount;
-    private ImageView ivAvatar, btnEditProfile;
-    private CardView cardAdminMenu;
-    private LinearLayout btnAccountInfo, btnAddress, btnPayment, btnWishlist;
+    private TextView tvPendingCount, tvShippingCount, tvCompletedCount, tvAllOrdersCount;
+    private com.google.android.material.imageview.ShapeableImageView ivAvatar;
+    private com.google.android.material.button.MaterialButton btnEditProfile, btnLogout;
+    private com.google.android.material.card.MaterialCardView cardAdminMenu;
+    private LinearLayout btnAccountInfo, btnWishlist, btnOrderHistory;
+    private LinearLayout btnPendingOrders, btnShippingOrders, btnCompletedOrders, btnAllOrders;
     private LinearLayout btnManageProducts, btnManageCategories, btnManageOrders, btnManageUsers;
-    private Button btnLogout;
     private BottomNavigationView bottomNav;
     private DatabaseHelper dbHelper;
     private User currentUser;
@@ -80,13 +82,22 @@ public class ProfileActivity extends AppCompatActivity {
         btnEditProfile = findViewById(R.id.btnEditProfile);
         bottomNav = findViewById(R.id.bottomNav);
         
+        // Order stats
+        tvPendingCount = findViewById(R.id.tvPendingCount);
+        tvShippingCount = findViewById(R.id.tvShippingCount);
+        tvCompletedCount = findViewById(R.id.tvCompletedCount);
+        tvAllOrdersCount = findViewById(R.id.tvAllOrdersCount);
+        btnPendingOrders = findViewById(R.id.btnPendingOrders);
+        btnShippingOrders = findViewById(R.id.btnShippingOrders);
+        btnCompletedOrders = findViewById(R.id.btnCompletedOrders);
+        btnAllOrders = findViewById(R.id.btnAllOrders);
+        
         tvAdminSection = findViewById(R.id.tvAdminSection);
         cardAdminMenu = findViewById(R.id.cardAdminMenu);
         
         btnAccountInfo = findViewById(R.id.btnAccountInfo);
-        btnAddress = findViewById(R.id.btnAddress);
-        btnPayment = findViewById(R.id.btnPayment);
         btnWishlist = findViewById(R.id.btnWishlist);
+        btnOrderHistory = findViewById(R.id.btnOrderHistory);
         tvWishlistCount = findViewById(R.id.tvWishlistCount);
         
         btnManageProducts = findViewById(R.id.btnManageProducts);
@@ -160,15 +171,43 @@ public class ProfileActivity extends AppCompatActivity {
             if (tvWishlistCount != null) {
                 tvWishlistCount.setText(String.valueOf(wishlistCount));
             }
+            
+            // Load order statistics
+            loadOrderStats();
         }
+    }
+    
+    private void loadOrderStats() {
+        java.util.List<com.example.ecommerceapp.models.Order> allOrders = dbHelper.getOrderHistory(userId);
+        
+        int pendingCount = 0;
+        int shippingCount = 0;
+        int completedCount = 0;
+        
+        for (com.example.ecommerceapp.models.Order order : allOrders) {
+            String status = order.getStatus();
+            if ("Chờ xác nhận".equals(status)) {
+                pendingCount++;
+            } else if ("Đang giao hàng".equals(status)) {
+                shippingCount++;
+            } else if ("Hoàn thành".equals(status)) {
+                completedCount++;
+            }
+        }
+        
+        if (tvPendingCount != null) tvPendingCount.setText(String.valueOf(pendingCount));
+        if (tvShippingCount != null) tvShippingCount.setText(String.valueOf(shippingCount));
+        if (tvCompletedCount != null) tvCompletedCount.setText(String.valueOf(completedCount));
+        if (tvAllOrdersCount != null) tvAllOrdersCount.setText(String.valueOf(allOrders.size()));
     }
 
     private void setupClickListeners() {
-        // Avatar click - open edit profile
+        // Avatar and edit profile clicks
         if (ivAvatar != null) {
             ivAvatar.setOnClickListener(v -> {
                 Intent intent = new Intent(this, EditProfileActivity.class);
                 startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
             });
         }
         
@@ -176,25 +215,33 @@ public class ProfileActivity extends AppCompatActivity {
             btnEditProfile.setOnClickListener(v -> {
                 Intent intent = new Intent(this, EditProfileActivity.class);
                 startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
             });
         }
 
+        // Order stats clicks
+        if (btnPendingOrders != null) {
+            btnPendingOrders.setOnClickListener(v -> openOrderHistory("Chờ xác nhận"));
+        }
+        
+        if (btnShippingOrders != null) {
+            btnShippingOrders.setOnClickListener(v -> openOrderHistory("Đang giao hàng"));
+        }
+        
+        if (btnCompletedOrders != null) {
+            btnCompletedOrders.setOnClickListener(v -> openOrderHistory("Hoàn thành"));
+        }
+        
+        if (btnAllOrders != null) {
+            btnAllOrders.setOnClickListener(v -> openOrderHistory("all"));
+        }
+
+        // Account settings clicks
         if (btnAccountInfo != null) {
             btnAccountInfo.setOnClickListener(v -> {
                 Intent intent = new Intent(this, EditProfileActivity.class);
                 startActivity(intent);
-            });
-        }
-
-        if (btnAddress != null) {
-            btnAddress.setOnClickListener(v -> {
-                Toast.makeText(this, "Tính năng đang phát triển", Toast.LENGTH_SHORT).show();
-            });
-        }
-
-        if (btnPayment != null) {
-            btnPayment.setOnClickListener(v -> {
-                Toast.makeText(this, "Tính năng đang phát triển", Toast.LENGTH_SHORT).show();
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
             });
         }
 
@@ -202,6 +249,15 @@ public class ProfileActivity extends AppCompatActivity {
             btnWishlist.setOnClickListener(v -> {
                 Intent intent = new Intent(this, WishlistActivity.class);
                 startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            });
+        }
+        
+        if (btnOrderHistory != null) {
+            btnOrderHistory.setOnClickListener(v -> {
+                Intent intent = new Intent(this, OrderHistoryActivity.class);
+                startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
             });
         }
 
@@ -236,17 +292,33 @@ public class ProfileActivity extends AppCompatActivity {
 
         if (btnLogout != null) {
             btnLogout.setOnClickListener(v -> {
-                SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.clear();
-                editor.apply();
-                
-                Intent intent = new Intent(ProfileActivity.this, LoginActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-                finish();
+                // Show confirmation dialog
+                new android.app.AlertDialog.Builder(this)
+                    .setTitle("Đăng xuất")
+                    .setMessage("Bạn có chắc chắn muốn đăng xuất?")
+                    .setPositiveButton("Đăng xuất", (dialog, which) -> {
+                        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.clear();
+                        editor.apply();
+                        
+                        Intent intent = new Intent(ProfileActivity.this, LoginActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(intent);
+                        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                        finish();
+                    })
+                    .setNegativeButton("Hủy", null)
+                    .show();
             });
         }
+    }
+    
+    private void openOrderHistory(String filter) {
+        Intent intent = new Intent(this, OrderHistoryActivity.class);
+        intent.putExtra("filter", filter);
+        startActivity(intent);
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
     }
 
     @Override

@@ -1,21 +1,123 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/colorBackground">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvOrders"
+    <!-- App Bar -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="4dp"
+        android:background="@color/colorWhite"
+        android:theme="@style/ThemeOverlay.Material3.Light">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/colorWhite"
+            app:title="Đơn hàng của tôi"
+            app:titleTextColor="@color/colorTextPrimary"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:navigationIconTint="@color/colorTextPrimary" />
+
+        <!-- Filter Tabs -->
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorWhite"
+            app:tabMode="scrollable"
+            app:tabTextColor="@color/colorTextSecondary"
+            app:tabSelectedTextColor="@color/colorPrimary"
+            app:tabIndicatorColor="@color/colorPrimary"
+            app:tabIndicatorHeight="3dp"
+            app:tabIndicatorFullWidth="false"
+            app:tabRippleColor="@color/colorPrimary"
+            app:tabTextAppearance="@style/TabTextAppearance" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Content -->
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="8dp" />
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-    <TextView
-        android:id="@+id/tvEmpty"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:text="Chưa có đơn hàng nào"
-        android:textSize="18sp"
-        android:visibility="gone" />
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-</RelativeLayout>
+            <!-- Orders List -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvOrders"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:paddingBottom="16dp"
+                android:clipToPadding="false" />
+
+            <!-- Empty State -->
+            <LinearLayout
+                android:id="@+id/layoutEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical"
+                android:padding="32dp"
+                android:gravity="center"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:src="@drawable/ic_orders"
+                    android:tint="@color/colorTextSecondary"
+                    android:alpha="0.3"
+                    android:contentDescription="No Orders" />
+
+                <TextView
+                    android:id="@+id/tvEmptyTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:text="Chưa có đơn hàng"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/colorTextPrimary"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:id="@+id/tvEmptyMessage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Các đơn hàng của bạn sẽ hiển thị ở đây"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorTextSecondary"
+                    android:gravity="center"
+                    android:lineSpacingExtra="4dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnShopNow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:text="Mua sắm ngay"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:paddingStart="32dp"
+                    android:paddingEnd="32dp"
+                    app:cornerRadius="12dp"
+                    app:elevation="2dp"
+                    style="@style/Widget.Material3.Button" />
+
+            </LinearLayout>
+
+        </FrameLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
