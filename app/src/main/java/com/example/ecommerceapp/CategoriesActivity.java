@@ -108,4 +108,11 @@ public class CategoriesActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Reload categories to show updated images
+        loadCategories();
+    }
+
 }

@@ -13,17 +13,20 @@ import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
+import com.bumptech.glide.Glide;
 import com.example.ecommerceapp.adapters.BannerAdapter;
 import com.example.ecommerceapp.adapters.CategoryAdapter;
 import com.example.ecommerceapp.adapters.ProductAdapter;
 import com.example.ecommerceapp.database.DatabaseHelper;
 import com.example.ecommerceapp.models.Product;
+import com.example.ecommerceapp.models.User;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.badge.BadgeDrawable;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,10 +59,19 @@ public class MainActivity extends AppCompatActivity {
             
             // XÓA DATABASE CŨ VÀ TẠO LẠI - CHỈ CHẠY 1 LẦN
             // Sau khi chạy app 1 lần thành công, hãy comment lại 2 dòng này
-            this.deleteDatabase("ecommerce.db");
+            // IMPORTANT: ĐÃ COMMENT LẠI ĐỂ KHÔNG MẤT DATA
+            // this.deleteDatabase("ecommerce.db");
             
             dbHelper = new DatabaseHelper(this);
-            dbHelper.updateProductImages();
+            // CHỈ CHẠY 1 LẦN ĐỂ CẬP NHẬT HÌNH ẢNH
+            // dbHelper.updateProductImages();
+            
+            // CHỈ CHẠY 1 LẦN để copy ảnh từ assets sang internal storage
+            // Sau khi chạy xong, comment lại dòng này
+            //dbHelper.migrateProductImagesFromAssets();
+            
+            // Migrate category images from assets (chỉ chạy 1 lần)
+            new com.example.ecommerceapp.utils.CategoryImageManager(this).migrateCategoryImagesFromAssets();
 
             initViews();
             setupToolbar();
@@ -387,6 +399,28 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.selectTab(null);
     }
 
+    private void loadUserAvatar() {
+        if (userId != -1) {
+            User user = dbHelper.getUserById(userId);
+            if (user != null && user.getAvatarUrl() != null && !user.getAvatarUrl().isEmpty()) {
+                File avatarFile = new File(user.getAvatarUrl());
+                if (avatarFile.exists()) {
+                    Glide.with(this)
+                            .load(avatarFile)
+                            .circleCrop()
+                            .placeholder(R.drawable.ic_avatar_placeholder)
+                            .into(ivProfile);
+                } else {
+                    ivProfile.setImageResource(R.drawable.ic_avatar_placeholder);
+                }
+            } else {
+                ivProfile.setImageResource(R.drawable.ic_avatar_placeholder);
+            }
+        } else {
+            ivProfile.setImageResource(R.drawable.ic_avatar_placeholder);
+        }
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -394,6 +428,9 @@ public class MainActivity extends AppCompatActivity {
         // Cập nhật lại userId khi quay lại (sau khi đăng nhập)
         SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         userId = prefs.getInt("user_id", -1);
+        
+        // Load avatar mới nhất
+        loadUserAvatar();
         
         updateCartBadge();
     }

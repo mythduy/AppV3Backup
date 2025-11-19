@@ -10,7 +10,10 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.signature.ObjectKey;
 import com.example.ecommerceapp.R;
+import com.example.ecommerceapp.utils.CategoryImageManager;
+import java.io.File;
 import java.util.List;
 
 public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.CategoryViewHolder> {
@@ -40,19 +43,24 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
         String category = categories.get(position);
         holder.tvCategory.setText(category);
         
-        // Load category image - try assets path directly
-        try {
-            String fileName = getCategoryFileName(category);
-            if (fileName != null) {
-                java.io.InputStream is = context.getAssets().open("images/categories/" + fileName);
-                android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(is);
-                holder.ivCategory.setImageBitmap(bitmap);
-                is.close();
-            } else {
-                holder.ivCategory.setImageResource(getCategoryIcon(category));
-            }
-        } catch (Exception e) {
-            // Fallback to icon if image not found
+        // Load category image from internal storage using CategoryImageManager
+        CategoryImageManager imageManager = new CategoryImageManager(context);
+        String imagePath = imageManager.getCategoryImagePath(category);
+        
+        if (imagePath != null && new File(imagePath).exists()) {
+            // Load from internal storage - full image with cache busting
+            File imageFile = new File(imagePath);
+            Glide.with(context)
+                .load(imageFile)
+                .signature(new ObjectKey(imageFile.lastModified())) // Force reload if file changed
+                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                .skipMemoryCache(true)
+                .placeholder(R.drawable.ic_category_default)
+                .error(R.drawable.ic_category_default)
+                .centerCrop()
+                .into(holder.ivCategory);
+        } else {
+            // Fallback to icon
             holder.ivCategory.setImageResource(getCategoryIcon(category));
         }
 
@@ -62,34 +70,6 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
             }
         });
     }
-    
-    private String getCategoryFileName(String category) {
-        switch (category) {
-            case "Vi điều khiển":
-                return "category_microcontroller.jpg";
-            case "Máy tính nhúng":
-                return "category_embedded.jpg";
-            case "Cảm biến":
-                return "category_sensor.jpg";
-            case "Module":
-            case "Module WiFi":
-                return "category_module.jpg";
-            case "LED":
-                return "category_led.jpg";
-            case "Màn hình":
-                return "category_display.jpg";
-            case "Động cơ":
-                return "category_motor.jpg";
-            case "Linh kiện":
-                return "category_component.jpg";
-            case "Nguồn":
-                return "category_power.jpg";
-            default:
-                return null;
-        }
-    }
-    
-
 
     @Override
     public int getItemCount() {

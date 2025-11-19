@@ -113,7 +113,14 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
 
         void bind(Product product) {
             tvName.setText(product.getName());
-            tvPrice.setText(formatPrice(product.getPrice()));
+            
+            // Show discounted price if available
+            if (product.getDiscount() > 0) {
+                double finalPrice = product.getFinalPrice();
+                tvPrice.setText(formatPrice(finalPrice));
+            } else {
+                tvPrice.setText(formatPrice(product.getPrice()));
+            }
 
             if (product.getStock() > 0) {
                 tvStock.setText("Còn: " + product.getStock());
@@ -123,12 +130,12 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                 tvStock.setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.colorRed));
             }
 
-            // Show badge for new products (last 5 products)
-            if (product.getId() > products.size() - 5) {
+            // Show badge based on product flags from database
+            if (product.isNew()) {
                 tvBadge.setVisibility(View.VISIBLE);
                 tvBadge.setText("MỚI");
                 tvBadge.setBackgroundResource(R.drawable.badge_new);
-            } else if (product.getPrice() > 500000) {
+            } else if (product.isHot()) {
                 tvBadge.setVisibility(View.VISIBLE);
                 tvBadge.setText("HOT");
                 tvBadge.setBackgroundResource(R.drawable.badge_hot);
@@ -136,15 +143,27 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                 tvBadge.setVisibility(View.GONE);
             }
 
-            // Load product image with Glide
+            // Load product image - support both file path and URL
             if (product.getImageUrl() != null && !product.getImageUrl().isEmpty()) {
-                Glide.with(context)
-                    .load(product.getImageUrl())
-                    .placeholder(R.drawable.ic_product_placeholder)
-                    .error(R.drawable.ic_product_placeholder)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .centerCrop()
-                    .into(ivProduct);
+                java.io.File imageFile = new java.io.File(product.getImageUrl());
+                if (imageFile.exists()) {
+                    // Load from internal storage
+                    Glide.with(context)
+                        .load(imageFile)
+                        .placeholder(R.drawable.ic_product_placeholder)
+                        .error(R.drawable.ic_product_placeholder)
+                        .centerCrop()
+                        .into(ivProduct);
+                } else {
+                    // Try loading as URL (backward compatibility)
+                    Glide.with(context)
+                        .load(product.getImageUrl())
+                        .placeholder(R.drawable.ic_product_placeholder)
+                        .error(R.drawable.ic_product_placeholder)
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .centerCrop()
+                        .into(ivProduct);
+                }
             } else {
                 ivProduct.setImageResource(R.drawable.ic_product_placeholder);
             }

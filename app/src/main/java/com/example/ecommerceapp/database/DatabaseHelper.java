@@ -14,7 +14,7 @@ import java.util.Locale;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "ecommerce.db";
-    private static final int DATABASE_VERSION = 5; // Increased version for wishlist
+    private static final int DATABASE_VERSION = 6; // Updated for new product fields
 
     // Tables
     private static final String TABLE_USERS = "users";
@@ -23,9 +23,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TABLE_ORDERS = "orders";
     private static final String TABLE_ORDER_ITEMS = "order_items";
     private static final String TABLE_WISHLIST = "wishlist";
+    
+    private Context context;
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        this.context = context;
     }
 
     @Override
@@ -45,7 +48,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "longitude REAL DEFAULT 0)";
         db.execSQL(createUsersTable);
 
-        // Create Products table
+        // Create Products table with new fields
         String createProductsTable = "CREATE TABLE " + TABLE_PRODUCTS + " (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "name TEXT, " +
@@ -53,7 +56,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "price REAL, " +
                 "category TEXT, " +
                 "stock INTEGER, " +
-                "image_url TEXT)";
+                "image_url TEXT, " +
+                "rating REAL DEFAULT 4.5, " +
+                "sku TEXT, " +
+                "warranty TEXT DEFAULT '12 tháng', " +
+                "discount REAL DEFAULT 0, " +
+                "is_new INTEGER DEFAULT 0, " +
+                "is_hot INTEGER DEFAULT 0, " +
+                "is_featured INTEGER DEFAULT 0)";
         db.execSQL(createProductsTable);
 
         // Create Cart table
@@ -276,13 +286,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return rows > 0;
     }
 
-    // Product operations
-    public List<Product> getAllProducts() {
+    // Helper method to extract products from cursor (reduces code duplication)
+    private List<Product> extractProductsFromCursor(Cursor cursor) {
         List<Product> products = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_PRODUCTS, null, null, null, null, null, null);
-
-        if (cursor.moveToFirst()) {
+        if (cursor != null && cursor.moveToFirst()) {
             do {
                 Product product = new Product();
                 product.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
@@ -292,11 +299,28 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 product.setCategory(cursor.getString(cursor.getColumnIndexOrThrow("category")));
                 product.setStock(cursor.getInt(cursor.getColumnIndexOrThrow("stock")));
                 product.setImageUrl(cursor.getString(cursor.getColumnIndexOrThrow("image_url")));
+                product.setRating(cursor.getDouble(cursor.getColumnIndexOrThrow("rating")));
+                product.setSku(cursor.getString(cursor.getColumnIndexOrThrow("sku")));
+                product.setWarranty(cursor.getString(cursor.getColumnIndexOrThrow("warranty")));
+                product.setDiscount(cursor.getDouble(cursor.getColumnIndexOrThrow("discount")));
+                product.setNew(cursor.getInt(cursor.getColumnIndexOrThrow("is_new")) == 1);
+                product.setHot(cursor.getInt(cursor.getColumnIndexOrThrow("is_hot")) == 1);
+                product.setFeatured(cursor.getInt(cursor.getColumnIndexOrThrow("is_featured")) == 1);
                 products.add(product);
             } while (cursor.moveToNext());
         }
-        cursor.close();
+        if (cursor != null) {
+            cursor.close();
+        }
         return products;
+    }
+
+    // Product operations
+    public List<Product> getAllProducts() {
+        List<Product> products = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_PRODUCTS, null, null, null, null, null, null);
+        return extractProductsFromCursor(cursor);
     }
 
     public Product getProductById(int productId) {
@@ -304,45 +328,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Cursor cursor = db.query(TABLE_PRODUCTS, null, "id=?",
                 new String[]{String.valueOf(productId)}, null, null, null);
 
-        if (cursor != null && cursor.moveToFirst()) {
-            Product product = new Product();
-            product.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-            product.setName(cursor.getString(cursor.getColumnIndexOrThrow("name")));
-            product.setDescription(cursor.getString(cursor.getColumnIndexOrThrow("description")));
-            product.setPrice(cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
-            product.setCategory(cursor.getString(cursor.getColumnIndexOrThrow("category")));
-            product.setStock(cursor.getInt(cursor.getColumnIndexOrThrow("stock")));
-            product.setImageUrl(cursor.getString(cursor.getColumnIndexOrThrow("image_url")));
-            cursor.close();
-            return product;
-        }
-        if (cursor != null) cursor.close();
-        return null;
+        List<Product> products = extractProductsFromCursor(cursor);
+        return products.isEmpty() ? null : products.get(0);
     }
 
     public List<Product> searchProducts(String query) {
-        List<Product> products = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.query(TABLE_PRODUCTS, null,
                 "name LIKE ? OR description LIKE ? OR category LIKE ?",
                 new String[]{"%" + query + "%", "%" + query + "%", "%" + query + "%"},
                 null, null, null);
-
-        if (cursor.moveToFirst()) {
-            do {
-                Product product = new Product();
-                product.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-                product.setName(cursor.getString(cursor.getColumnIndexOrThrow("name")));
-                product.setDescription(cursor.getString(cursor.getColumnIndexOrThrow("description")));
-                product.setPrice(cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
-                product.setCategory(cursor.getString(cursor.getColumnIndexOrThrow("category")));
-                product.setStock(cursor.getInt(cursor.getColumnIndexOrThrow("stock")));
-                product.setImageUrl(cursor.getString(cursor.getColumnIndexOrThrow("image_url")));
-                products.add(product);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        return products;
+        return extractProductsFromCursor(cursor);
     }
 
     public List<String> getAllCategories() {
@@ -360,26 +356,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public List<Product> getProductsByCategory(String category) {
-        List<Product> products = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.query(TABLE_PRODUCTS, null, "category=?",
                 new String[]{category}, null, null, null);
-
-        if (cursor.moveToFirst()) {
-            do {
-                Product product = new Product();
-                product.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-                product.setName(cursor.getString(cursor.getColumnIndexOrThrow("name")));
-                product.setDescription(cursor.getString(cursor.getColumnIndexOrThrow("description")));
-                product.setPrice(cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
-                product.setCategory(cursor.getString(cursor.getColumnIndexOrThrow("category")));
-                product.setStock(cursor.getInt(cursor.getColumnIndexOrThrow("stock")));
-                product.setImageUrl(cursor.getString(cursor.getColumnIndexOrThrow("image_url")));
-                products.add(product);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        return products;
+        return extractProductsFromCursor(cursor);
     }
 
     // Cart operations
@@ -418,7 +398,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
 
         String query = "SELECT c.id, c.user_id, c.product_id, c.quantity, " +
-                "p.name, p.price, p.image_url " +
+                "p.name, p.price, p.image_url, p.discount " +
                 "FROM " + TABLE_CART + " c " +
                 "INNER JOIN " + TABLE_PRODUCTS + " p ON c.product_id = p.id " +
                 "WHERE c.user_id = ?";
@@ -433,7 +413,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 item.setProductId(cursor.getInt(2));
                 item.setQuantity(cursor.getInt(3));
                 item.setProductName(cursor.getString(4));
-                item.setProductPrice(cursor.getDouble(5));
+                
+                // Calculate final price with discount
+                double price = cursor.getDouble(5);
+                double discount = cursor.getDouble(7);
+                double finalPrice = price * (1 - discount / 100);
+                item.setProductPrice(finalPrice);
+                
                 item.setImageUrl(cursor.getString(6));
                 cartItems.add(item);
             } while (cursor.moveToNext());
@@ -530,72 +516,37 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public List<Product> getLatestProducts(int limit) {
-        List<Product> products = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_PRODUCTS, null, null, null, null, null,
-                "id DESC", String.valueOf(limit));
-
-        if (cursor.moveToFirst()) {
-            do {
-                Product product = new Product();
-                product.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-                product.setName(cursor.getString(cursor.getColumnIndexOrThrow("name")));
-                product.setDescription(cursor.getString(cursor.getColumnIndexOrThrow("description")));
-                product.setPrice(cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
-                product.setCategory(cursor.getString(cursor.getColumnIndexOrThrow("category")));
-                product.setStock(cursor.getInt(cursor.getColumnIndexOrThrow("stock")));
-                product.setImageUrl(cursor.getString(cursor.getColumnIndexOrThrow("image_url")));
-                products.add(product);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        return products;
+        // Get latest products based on is_new flag or newest ID
+        Cursor cursor = db.query(TABLE_PRODUCTS, null, "stock > ?",
+                new String[]{"0"}, null, null, "id DESC", String.valueOf(limit));
+        return extractProductsFromCursor(cursor);
     }
 
     public List<Product> getFeaturedProducts(int limit) {
-        List<Product> products = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_PRODUCTS, null, "stock > ?",
-                new String[]{"10"}, null, null, "price DESC", String.valueOf(limit));
+        // Use is_featured flag from database
+        Cursor cursor = db.query(TABLE_PRODUCTS, null, "is_featured = ? AND stock > ?",
+                new String[]{"1", "0"}, null, null, "price DESC", String.valueOf(limit));
 
-        if (cursor.moveToFirst()) {
-            do {
-                Product product = new Product();
-                product.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-                product.setName(cursor.getString(cursor.getColumnIndexOrThrow("name")));
-                product.setDescription(cursor.getString(cursor.getColumnIndexOrThrow("description")));
-                product.setPrice(cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
-                product.setCategory(cursor.getString(cursor.getColumnIndexOrThrow("category")));
-                product.setStock(cursor.getInt(cursor.getColumnIndexOrThrow("stock")));
-                product.setImageUrl(cursor.getString(cursor.getColumnIndexOrThrow("image_url")));
-                products.add(product);
-            } while (cursor.moveToNext());
+        List<Product> products = extractProductsFromCursor(cursor);
+        
+        // If no featured products, fallback to high price products
+        if (products.isEmpty()) {
+            cursor = db.query(TABLE_PRODUCTS, null, "stock > ?",
+                    new String[]{"10"}, null, null, "price DESC", String.valueOf(limit));
+            products = extractProductsFromCursor(cursor);
         }
-        cursor.close();
+        
         return products;
     }
 
     public List<Product> getBestsellerProducts(int limit) {
-        List<Product> products = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_PRODUCTS, null, null, null, null, null,
-                "RANDOM()", String.valueOf(limit));
-
-        if (cursor.moveToFirst()) {
-            do {
-                Product product = new Product();
-                product.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-                product.setName(cursor.getString(cursor.getColumnIndexOrThrow("name")));
-                product.setDescription(cursor.getString(cursor.getColumnIndexOrThrow("description")));
-                product.setPrice(cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
-                product.setCategory(cursor.getString(cursor.getColumnIndexOrThrow("category")));
-                product.setStock(cursor.getInt(cursor.getColumnIndexOrThrow("stock")));
-                product.setImageUrl(cursor.getString(cursor.getColumnIndexOrThrow("image_url")));
-                products.add(product);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        return products;
+        // For now use random, in future can track sales and use that
+        Cursor cursor = db.query(TABLE_PRODUCTS, null, "stock > ?",
+                new String[]{"0"}, null, null, "RANDOM()", String.valueOf(limit));
+        return extractProductsFromCursor(cursor);
     }
 
     public int getProductCountByCategory(String category) {
@@ -716,7 +667,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put("stock", product.getStock());
         values.put("image_url", product.getImageUrl());
         
+        // New fields
+        values.put("rating", product.getRating());
+        values.put("sku", product.getSku());
+        values.put("warranty", product.getWarranty());
+        values.put("discount", product.getDiscount());
+        values.put("is_new", product.isNew() ? 1 : 0);
+        values.put("is_hot", product.isHot() ? 1 : 0);
+        values.put("is_featured", product.isFeatured() ? 1 : 0);
+        
         long id = db.insert(TABLE_PRODUCTS, null, values);
+        
+        // Auto-generate SKU if not provided
+        if (id != -1 && (product.getSku() == null || product.getSku().isEmpty())) {
+            ContentValues skuValues = new ContentValues();
+            skuValues.put("sku", "PRD-" + String.format("%04d", id));
+            db.update(TABLE_PRODUCTS, skuValues, "id = ?", new String[]{String.valueOf(id)});
+        }
+        
         return id;
     }
 
@@ -730,6 +698,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put("category", product.getCategory());
         values.put("stock", product.getStock());
         values.put("image_url", product.getImageUrl());
+        
+        // New fields
+        values.put("rating", product.getRating());
+        values.put("sku", product.getSku());
+        values.put("warranty", product.getWarranty());
+        values.put("discount", product.getDiscount());
+        values.put("is_new", product.isNew() ? 1 : 0);
+        values.put("is_hot", product.isHot() ? 1 : 0);
+        values.put("is_featured", product.isFeatured() ? 1 : 0);
         
         int rows = db.update(TABLE_PRODUCTS, values, "id = ?", 
                 new String[]{String.valueOf(product.getId())});
@@ -873,7 +850,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     
     // Get all wishlist items for user
     public List<Product> getWishlistProducts(int userId) {
-        List<Product> products = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
         
         String query = "SELECT p.* FROM " + TABLE_PRODUCTS + " p " +
@@ -882,22 +858,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "ORDER BY w.added_date DESC";
         
         Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(userId)});
-        
-        if (cursor.moveToFirst()) {
-            do {
-                Product product = new Product();
-                product.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-                product.setName(cursor.getString(cursor.getColumnIndexOrThrow("name")));
-                product.setDescription(cursor.getString(cursor.getColumnIndexOrThrow("description")));
-                product.setPrice(cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
-                product.setCategory(cursor.getString(cursor.getColumnIndexOrThrow("category")));
-                product.setStock(cursor.getInt(cursor.getColumnIndexOrThrow("stock")));
-                product.setImageUrl(cursor.getString(cursor.getColumnIndexOrThrow("image_url")));
-                products.add(product);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        return products;
+        return extractProductsFromCursor(cursor);
     }
     
     // Get wishlist count
@@ -924,5 +885,70 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         cursor.close();
         return count;
+    }
+    
+    // Migrate images from assets to internal storage (run once)
+    public void migrateProductImagesFromAssets() {
+        try {
+            String[] assetImages = context.getAssets().list("images/products");
+            if (assetImages == null || assetImages.length == 0) return;
+            
+            // Create directory
+            java.io.File directory = new java.io.File(context.getFilesDir(), "product_images");
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+            
+            List<Product> products = getAllProducts();
+            int copiedCount = 0;
+            
+            for (Product product : products) {
+                // Check if product already has local image
+                String currentImage = product.getImageUrl();
+                if (currentImage != null && !currentImage.isEmpty() && 
+                    !currentImage.startsWith("http") && 
+                    new java.io.File(currentImage).exists()) {
+                    continue; // Already migrated
+                }
+                
+                // Try to find matching asset image
+                String assetFileName = "product_" + product.getId() + ".jpg";
+                boolean found = false;
+                
+                for (String asset : assetImages) {
+                    if (asset.equals(assetFileName)) {
+                        found = true;
+                        break;
+                    }
+                }
+                
+                if (found) {
+                    // Copy from assets to internal storage
+                    java.io.InputStream is = context.getAssets().open("images/products/" + assetFileName);
+                    
+                    String newFileName = "product_" + product.getId() + "_" + System.currentTimeMillis() + ".jpg";
+                    java.io.File outFile = new java.io.File(directory, newFileName);
+                    java.io.FileOutputStream fos = new java.io.FileOutputStream(outFile);
+                    
+                    byte[] buffer = new byte[1024];
+                    int length;
+                    while ((length = is.read(buffer)) > 0) {
+                        fos.write(buffer, 0, length);
+                    }
+                    
+                    fos.close();
+                    is.close();
+                    
+                    // Update product with new path
+                    product.setImageUrl(outFile.getAbsolutePath());
+                    updateProduct(product);
+                    copiedCount++;
+                }
+            }
+            
+            android.util.Log.d("DatabaseHelper", "Migrated " + copiedCount + " product images");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

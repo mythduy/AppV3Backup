@@ -4,6 +4,8 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -21,6 +23,9 @@ import com.bumptech.glide.Glide;
 import com.example.ecommerceapp.database.DatabaseHelper;
 import com.example.ecommerceapp.models.User;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 
 public class EditProfileActivity extends AppCompatActivity {
     private ImageView ivAvatar;
@@ -84,16 +89,66 @@ public class EditProfileActivity extends AppCompatActivity {
                     if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                         Uri imageUri = result.getData().getData();
                         if (imageUri != null) {
-                            avatarUrl = imageUri.toString();
-                            Glide.with(this)
-                                    .load(imageUri)
-                                    .circleCrop()
-                                    .placeholder(R.drawable.ic_avatar_placeholder)
-                                    .into(ivAvatar);
+                            handleImageSelected(imageUri);
                         }
                     }
                 }
         );
+    }
+    
+    private void handleImageSelected(Uri imageUri) {
+        try {
+            // Read image from URI
+            InputStream inputStream = getContentResolver().openInputStream(imageUri);
+            Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+            inputStream.close();
+            
+            // Save to internal storage
+            avatarUrl = saveAvatarToInternalStorage(bitmap);
+            
+            // Display image
+            Glide.with(this)
+                    .load(new File(avatarUrl))
+                    .circleCrop()
+                    .placeholder(R.drawable.ic_avatar_placeholder)
+                    .into(ivAvatar);
+            
+            Toast.makeText(this, "✅ Đã chọn ảnh thành công", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "❌ Lỗi khi chọn ảnh", Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    private String saveAvatarToInternalStorage(Bitmap bitmap) {
+        try {
+            // Create avatars directory
+            File directory = new File(getFilesDir(), "user_avatars");
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+            
+            // Delete old avatar if exists
+            if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                File oldFile = new File(avatarUrl);
+                if (oldFile.exists()) {
+                    oldFile.delete();
+                }
+            }
+            
+            // Save new avatar
+            String filename = "avatar_user_" + userId + ".jpg";
+            File file = new File(directory, filename);
+            
+            FileOutputStream fos = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
+            fos.close();
+            
+            return file.getAbsolutePath();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private void setupToolbar() {
@@ -139,13 +194,18 @@ public class EditProfileActivity extends AppCompatActivity {
             etAddress.setText(user.getAddress());
             avatarUrl = user.getAvatarUrl();
 
-            // Load avatar
+            // Load avatar from file
             if (avatarUrl != null && !avatarUrl.isEmpty()) {
-                Glide.with(this)
-                        .load(avatarUrl)
-                        .circleCrop()
-                        .placeholder(R.drawable.ic_avatar_placeholder)
-                        .into(ivAvatar);
+                File avatarFile = new File(avatarUrl);
+                if (avatarFile.exists()) {
+                    Glide.with(this)
+                            .load(avatarFile)
+                            .circleCrop()
+                            .placeholder(R.drawable.ic_avatar_placeholder)
+                            .into(ivAvatar);
+                } else {
+                    ivAvatar.setImageResource(R.drawable.ic_avatar_placeholder);
+                }
             }
         }
     }

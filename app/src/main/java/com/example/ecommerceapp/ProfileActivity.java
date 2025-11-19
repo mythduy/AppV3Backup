@@ -144,14 +144,19 @@ public class ProfileActivity extends AppCompatActivity {
             tvFullName.setText(currentUser.getFullName());
             tvEmail.setText(currentUser.getEmail());
             
-            // Load avatar
+            // Load avatar from file
             String avatarUrl = currentUser.getAvatarUrl();
             if (avatarUrl != null && !avatarUrl.isEmpty()) {
-                Glide.with(this)
-                        .load(avatarUrl)
-                        .circleCrop()
-                        .placeholder(R.drawable.ic_avatar_placeholder)
-                        .into(ivAvatar);
+                java.io.File avatarFile = new java.io.File(avatarUrl);
+                if (avatarFile.exists()) {
+                    Glide.with(this)
+                            .load(avatarFile)
+                            .circleCrop()
+                            .placeholder(R.drawable.ic_avatar_placeholder)
+                            .into(ivAvatar);
+                } else {
+                    ivAvatar.setImageResource(R.drawable.ic_avatar_placeholder);
+                }
             } else {
                 ivAvatar.setImageResource(R.drawable.ic_avatar_placeholder);
             }

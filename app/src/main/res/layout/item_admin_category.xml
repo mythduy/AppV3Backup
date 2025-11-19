@@ -14,13 +14,13 @@
         android:orientation="horizontal"
         android:padding="16dp">
 
-        <ImageView
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/ivCategoryIcon"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="@drawable/bg_circle_primary"
-            android:padding="8dp"
+            android:scaleType="centerCrop"
             android:src="@drawable/ic_category"
-            android:tint="@android:color/white" />
+            app:shapeAppearanceOverlay="@style/CircleImageView" />
 
         <TextView
             android:id="@+id/tvCategoryName"
@@ -34,9 +34,20 @@
             android:textStyle="bold" />
 
         <ImageButton
+            android:id="@+id/btnUploadImage"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Upload logo"
+            android:src="@android:drawable/ic_menu_gallery"
+            android:tint="@color/colorAccent" />
+
+        <ImageButton
             android:id="@+id/btnEdit"
             android:layout_width="40dp"
             android:layout_height="40dp"
+            android:layout_marginStart="8dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Chỉnh sửa"
             android:src="@android:drawable/ic_menu_edit"

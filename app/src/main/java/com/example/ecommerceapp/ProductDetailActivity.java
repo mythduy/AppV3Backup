@@ -123,28 +123,48 @@ public class ProductDetailActivity extends AppCompatActivity {
 
             // Product basic info
             tvName.setText(product.getName());
-            tvPrice.setText(formatPrice(product.getPrice()));
+            
+            // Display price with discount if available
+            if (product.getDiscount() > 0) {
+                tvPrice.setText(formatPrice(product.getFinalPrice()) + " (Giảm " + 
+                              String.format("%.0f", product.getDiscount()) + "%)");
+            } else {
+                tvPrice.setText(formatPrice(product.getPrice()));
+            }
+            
             tvDescription.setText(product.getDescription());
             
             // Product details
             tvCategory.setText(product.getCategory());
             tvStock.setText("Còn " + product.getStock() + " sp");
-            tvSKU.setText("PRD-" + String.format("%04d", product.getId()));
-            tvWarranty.setText("12 tháng");
-            tvRating.setText("4.5");
+            tvSKU.setText(product.getFormattedSku());
+            tvWarranty.setText(product.getWarranty());
+            tvRating.setText(String.format("%.1f", product.getRating()));
             
             // Initial quantity and total
             updateQuantityAndTotal();
 
-            // Load product image with Glide
+            // Load product image - support both file path and URL
             if (product.getImageUrl() != null && !product.getImageUrl().isEmpty()) {
-                Glide.with(this)
-                    .load(product.getImageUrl())
-                    .placeholder(R.drawable.ic_product_placeholder)
-                    .error(R.drawable.ic_product_placeholder)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .centerCrop()
-                    .into(ivProduct);
+                java.io.File imageFile = new java.io.File(product.getImageUrl());
+                if (imageFile.exists()) {
+                    // Load from internal storage
+                    Glide.with(this)
+                        .load(imageFile)
+                        .placeholder(R.drawable.ic_product_placeholder)
+                        .error(R.drawable.ic_product_placeholder)
+                        .centerCrop()
+                        .into(ivProduct);
+                } else {
+                    // Try loading as URL (backward compatibility)
+                    Glide.with(this)
+                        .load(product.getImageUrl())
+                        .placeholder(R.drawable.ic_product_placeholder)
+                        .error(R.drawable.ic_product_placeholder)
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .centerCrop()
+                        .into(ivProduct);
+                }
             } else {
                 ivProduct.setImageResource(R.drawable.ic_product_placeholder);
             }
@@ -183,7 +203,7 @@ public class ProductDetailActivity extends AppCompatActivity {
     private void updateQuantityAndTotal() {
         tvQuantity.setText(String.valueOf(quantity));
         if (product != null) {
-            double totalPrice = product.getPrice() * quantity;
+            double totalPrice = product.getFinalPrice() * quantity;
             tvTotalPrice.setText(formatPrice(totalPrice));
         }
     }
@@ -229,8 +249,13 @@ public class ProductDetailActivity extends AppCompatActivity {
         if (product != null) {
             Intent shareIntent = new Intent(Intent.ACTION_SEND);
             shareIntent.setType("text/plain");
+            
+            String priceText = product.getDiscount() > 0 ? 
+                formatPrice(product.getFinalPrice()) + " (Giảm " + String.format("%.0f", product.getDiscount()) + "%)" :
+                formatPrice(product.getPrice());
+            
             String shareMessage = "Xem sản phẩm tuyệt vời này: " + product.getName() + 
-                                "\nGiá: " + formatPrice(product.getPrice()) +
+                                "\nGiá: " + priceText +
                                 "\n\nTải app Electronics Shop để mua ngay!";
             shareIntent.putExtra(Intent.EXTRA_SUBJECT, product.getName());
             shareIntent.putExtra(Intent.EXTRA_TEXT, shareMessage);

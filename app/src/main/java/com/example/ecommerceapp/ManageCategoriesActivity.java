@@ -1,5 +1,6 @@
 package com.example.ecommerceapp;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
 import android.widget.EditText;
@@ -46,7 +47,10 @@ public class ManageCategoriesActivity extends AppCompatActivity {
         setupRecyclerView();
         loadCategories();
 
-        fabAdd.setOnClickListener(v -> showAddCategoryDialog());
+        fabAdd.setOnClickListener(v -> {
+            Intent intent = new Intent(this, AddEditCategoryActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void setupRecyclerView() {
@@ -61,8 +65,19 @@ public class ManageCategoriesActivity extends AppCompatActivity {
             public void onDelete(String category) {
                 showDeleteConfirmDialog(category);
             }
+            
+            @Override
+            public void onUploadImage(String category) {
+                openUploadImageActivity(category);
+            }
         });
         rvCategories.setAdapter(adapter);
+    }
+    
+    private void openUploadImageActivity(String category) {
+        Intent intent = new Intent(this, AddEditCategoryActivity.class);
+        intent.putExtra("category_name", category);
+        startActivity(intent);
     }
 
     private void showAddCategoryDialog() {
