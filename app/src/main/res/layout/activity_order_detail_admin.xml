@@ -1,0 +1,564 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorBackground">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/colorPrimary"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Order Info Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/tvOrderId"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="#123456"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/colorTextPrimary" />
+
+                        <TextView
+                            android:id="@+id/tvStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Chờ xác nhận"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:paddingHorizontal="12dp"
+                            android:paddingVertical="6dp"
+                            android:background="@drawable/bg_status_badge"
+                            android:textColor="@android:color/white" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvOrderDate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="19/11/2025 10:30"
+                        android:textSize="14sp"
+                        android:textColor="@color/colorTextSecondary" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Timeline Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:id="@+id/layoutTimeline"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Trạng thái đơn hàng"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/colorTextPrimary"
+                        android:layout_marginBottom="12dp" />
+
+                    <TextView
+                        android:id="@+id/tvTimelinePending"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="✅ Đã đặt hàng\n19/11/2025 10:30"
+                        android:textSize="14sp"
+                        android:textColor="@android:color/holo_green_dark"
+                        android:paddingVertical="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvTimelineConfirmed"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="⏳ Chờ xác nhận"
+                        android:textSize="14sp"
+                        android:textColor="@android:color/darker_gray"
+                        android:paddingVertical="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvTimelineShipping"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="⏳ Chờ giao hàng"
+                        android:textSize="14sp"
+                        android:textColor="@android:color/darker_gray"
+                        android:paddingVertical="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvTimelineCompleted"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="⏳ Chờ hoàn thành"
+                        android:textSize="14sp"
+                        android:textColor="@android:color/darker_gray"
+                        android:paddingVertical="8dp" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Customer Info Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Thông tin khách hàng"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/colorTextPrimary" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnCallCustomer"
+                            style="@style/Widget.Material3.Button.IconButton"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            app:icon="@android:drawable/ic_menu_call"
+                            app:iconTint="@color/colorPrimary"
+                            android:contentDescription="Gọi khách hàng" />
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tên khách hàng"
+                        android:textSize="12sp"
+                        android:textColor="@color/colorTextSecondary" />
+
+                    <TextView
+                        android:id="@+id/tvCustomerName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Nguyễn Văn A"
+                        android:textSize="16sp"
+                        android:textColor="@color/colorTextPrimary"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Số điện thoại"
+                        android:textSize="12sp"
+                        android:textColor="@color/colorTextSecondary" />
+
+                    <TextView
+                        android:id="@+id/tvCustomerPhone"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0123456789"
+                        android:textSize="16sp"
+                        android:textColor="@color/colorTextPrimary"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Địa chỉ giao hàng"
+                        android:textSize="12sp"
+                        android:textColor="@color/colorTextSecondary" />
+
+                    <TextView
+                        android:id="@+id/tvCustomerAddress"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="123 Đường ABC, Quận 1, TP.HCM"
+                        android:textSize="16sp"
+                        android:textColor="@color/colorTextPrimary" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Shipper Info Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardShipperInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:visibility="gone"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Thông tin giao hàng"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/colorTextPrimary"
+                        android:layout_marginBottom="12dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Người giao"
+                        android:textSize="12sp"
+                        android:textColor="@color/colorTextSecondary" />
+
+                    <TextView
+                        android:id="@+id/tvShipperInfo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Shipper Name - 0987654321"
+                        android:textSize="16sp"
+                        android:textColor="@color/colorTextPrimary"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvTrackingCode"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Mã vận đơn: DH123456"
+                        android:textSize="14sp"
+                        android:textColor="@color/colorPrimary" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Order Items Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sản phẩm"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/colorTextPrimary"
+                        android:layout_marginBottom="12dp" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvOrderItems"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Payment Info Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Thanh toán"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/colorTextPrimary"
+                        android:layout_marginBottom="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Phương thức"
+                            android:textSize="14sp"
+                            android:textColor="@color/colorTextSecondary" />
+
+                        <TextView
+                            android:id="@+id/tvPaymentMethod"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="COD"
+                            android:textSize="14sp"
+                            android:textColor="@color/colorTextPrimary" />
+
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="12dp"
+                        android:background="@color/colorBorder" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Tổng tiền"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/colorTextPrimary" />
+
+                        <TextView
+                            android:id="@+id/tvTotalAmount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="1.500.000đ"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/colorGreen" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Admin Notes Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardAdminNotes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:visibility="gone"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#FFF9C4">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📝 Ghi chú nội bộ"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/colorTextPrimary"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvAdminNotes"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Ghi chú của admin"
+                        android:textSize="14sp"
+                        android:textColor="@color/colorTextPrimary" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Cancelled Reason Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardCancelledReason"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:visibility="gone"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#FFCDD2">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="❌ Lý do hủy đơn"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/colorTextPrimary"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvCancelledReason"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Lý do hủy"
+                        android:textSize="14sp"
+                        android:textColor="@color/colorTextPrimary" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Action Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="16dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnConfirm"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:text="✅ Xác nhận đơn hàng"
+                    android:textSize="16sp"
+                    android:visibility="gone"
+                    app:cornerRadius="12dp"
+                    android:layout_marginBottom="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnShip"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:text="🚚 Giao hàng"
+                    android:textSize="16sp"
+                    android:visibility="gone"
+                    app:cornerRadius="12dp"
+                    android:layout_marginBottom="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAddShipping"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:text="📝 Cập nhật thông tin giao hàng"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    app:cornerRadius="12dp"
+                    android:layout_marginBottom="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnComplete"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:text="✔️ Hoàn thành đơn hàng"
+                    android:textSize="16sp"
+                    android:visibility="gone"
+                    app:cornerRadius="12dp"
+                    android:backgroundTint="@color/colorGreen"
+                    android:layout_marginBottom="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAddNotes"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:text="📝 Thêm ghi chú nội bộ"
+                    android:textSize="14sp"
+                    app:cornerRadius="12dp"
+                    android:layout_marginBottom="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCancel"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:text="❌ Hủy đơn hàng"
+                    android:textSize="16sp"
+                    app:cornerRadius="12dp"
+                    app:strokeColor="@color/colorRed"
+                    android:textColor="@color/colorRed" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -48,6 +48,7 @@
         <activity android:name=".ManageCategoriesActivity" />
         <activity android:name=".AddEditCategoryActivity" />
         <activity android:name=".ManageOrdersActivity" />
+        <activity android:name=".OrderDetailAdminActivity" />
         <activity android:name=".ManageUsersActivity" />
         <activity android:name=".SearchActivity" />
         <activity android:name=".WishlistActivity" />

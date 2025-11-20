@@ -333,7 +333,7 @@ public class CheckoutActivity extends AppCompatActivity {
 
         String fullAddress = address + ", " + ward + ", " + district + ", " + province;
         Order order = new Order(0, userId, orderDate, totalAmount,
-                "Đang xử lý", fullAddress, paymentMethod);
+                Order.STATUS_PENDING, fullAddress, paymentMethod);
 
         long orderId = dbHelper.createOrder(order, selectedCartItems);
 

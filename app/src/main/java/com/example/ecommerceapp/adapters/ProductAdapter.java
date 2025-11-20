@@ -143,10 +143,11 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                 tvBadge.setVisibility(View.GONE);
             }
 
-            // Load product image - support both file path and URL
+            // Load product image - support both file path and asset URL
             if (product.getImageUrl() != null && !product.getImageUrl().isEmpty()) {
+                // Check if it's a file path (not starting with file://)
                 java.io.File imageFile = new java.io.File(product.getImageUrl());
-                if (imageFile.exists()) {
+                if (imageFile.exists() && !product.getImageUrl().startsWith("file://")) {
                     // Load from internal storage
                     Glide.with(context)
                         .load(imageFile)
@@ -155,7 +156,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                         .centerCrop()
                         .into(ivProduct);
                 } else {
-                    // Try loading as URL (backward compatibility)
+                    // Load as URL (supports file:///android_asset/ and http/https URLs)
                     Glide.with(context)
                         .load(product.getImageUrl())
                         .placeholder(R.drawable.ic_product_placeholder)

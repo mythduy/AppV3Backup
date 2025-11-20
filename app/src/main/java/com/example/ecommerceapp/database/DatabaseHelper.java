@@ -14,7 +14,7 @@ import java.util.Locale;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "ecommerce.db";
-    private static final int DATABASE_VERSION = 6; // Updated for new product fields
+    private static final int DATABASE_VERSION = 7; // Updated for order management features
 
     // Tables
     private static final String TABLE_USERS = "users";
@@ -76,15 +76,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "FOREIGN KEY(product_id) REFERENCES products(id))";
         db.execSQL(createCartTable);
 
-        // Create Orders table
+        // Create Orders table with extended fields
         String createOrdersTable = "CREATE TABLE " + TABLE_ORDERS + " (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "user_id INTEGER, " +
                 "order_date TEXT, " +
                 "total_amount REAL, " +
-                "status TEXT, " +
+                "status TEXT DEFAULT 'pending', " + // pending/confirmed/shipping/completed/cancelled
                 "shipping_address TEXT, " +
                 "payment_method TEXT, " +
+                "shipper_name TEXT, " +
+                "shipper_phone TEXT, " +
+                "tracking_code TEXT, " +
+                "cancelled_reason TEXT, " +
+                "admin_notes TEXT, " +
+                "confirmed_at TEXT, " +
+                "shipped_at TEXT, " +
+                "completed_at TEXT, " +
+                "cancelled_at TEXT, " +
                 "FOREIGN KEY(user_id) REFERENCES users(id))";
         db.execSQL(createOrdersTable);
 
@@ -568,14 +577,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         Order order = null;
         if (cursor.moveToFirst()) {
-            order = new Order();
-            order.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-            order.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow("user_id")));
-            order.setOrderDate(cursor.getString(cursor.getColumnIndexOrThrow("order_date")));
-            order.setTotalAmount(cursor.getDouble(cursor.getColumnIndexOrThrow("total_amount")));
-            order.setStatus(cursor.getString(cursor.getColumnIndexOrThrow("status")));
-            order.setShippingAddress(cursor.getString(cursor.getColumnIndexOrThrow("shipping_address")));
-            order.setPaymentMethod(cursor.getString(cursor.getColumnIndexOrThrow("payment_method")));
+            order = extractOrderFromCursor(cursor);
         }
         cursor.close();
         return order;
@@ -950,5 +952,164 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    
+    // ==================== ORDER MANAGEMENT METHODS ====================
+    
+    public List<Order> getOrdersByStatus(String status) {
+        List<Order> orders = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_ORDERS, null, "status=?", 
+                new String[]{status}, null, null, "id DESC");
+
+        if (cursor.moveToFirst()) {
+            do {
+                orders.add(extractOrderFromCursor(cursor));
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        return orders;
+    }
+    
+    public int getOrderCountByStatus(String status) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_ORDERS + " WHERE status=?", 
+                new String[]{status});
+        int count = 0;
+        if (cursor.moveToFirst()) {
+            count = cursor.getInt(0);
+        }
+        cursor.close();
+        return count;
+    }
+    
+    public double getTotalRevenue() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT SUM(total_amount) FROM " + TABLE_ORDERS + 
+                " WHERE status=?", new String[]{Order.STATUS_COMPLETED});
+        double total = 0;
+        if (cursor.moveToFirst()) {
+            total = cursor.getDouble(0);
+        }
+        cursor.close();
+        return total;
+    }
+    
+    public double getTodayRevenue() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String today = sdf.format(new Date());
+        
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT SUM(total_amount) FROM " + TABLE_ORDERS + 
+                " WHERE status=? AND DATE(order_date)=?", 
+                new String[]{Order.STATUS_COMPLETED, today});
+        double total = 0;
+        if (cursor.moveToFirst()) {
+            total = cursor.getDouble(0);
+        }
+        cursor.close();
+        return total;
+    }
+    
+    public boolean updateOrderStatus(int orderId, String newStatus) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("status", newStatus);
+        
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        String currentTime = sdf.format(new Date());
+        
+        // Add timestamp based on status
+        switch (newStatus) {
+            case Order.STATUS_CONFIRMED:
+                values.put("confirmed_at", currentTime);
+                break;
+            case Order.STATUS_SHIPPING:
+                values.put("shipped_at", currentTime);
+                break;
+            case Order.STATUS_COMPLETED:
+                values.put("completed_at", currentTime);
+                break;
+            case Order.STATUS_CANCELLED:
+                values.put("cancelled_at", currentTime);
+                break;
+        }
+        
+        int rows = db.update(TABLE_ORDERS, values, "id=?", new String[]{String.valueOf(orderId)});
+        return rows > 0;
+    }
+    
+    public boolean updateOrderShippingInfo(int orderId, String shipperName, String shipperPhone, String trackingCode) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("shipper_name", shipperName);
+        values.put("shipper_phone", shipperPhone);
+        values.put("tracking_code", trackingCode);
+        
+        int rows = db.update(TABLE_ORDERS, values, "id=?", new String[]{String.valueOf(orderId)});
+        return rows > 0;
+    }
+    
+    public boolean cancelOrder(int orderId, String reason) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("status", Order.STATUS_CANCELLED);
+        values.put("cancelled_reason", reason);
+        
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        values.put("cancelled_at", sdf.format(new Date()));
+        
+        int rows = db.update(TABLE_ORDERS, values, "id=?", new String[]{String.valueOf(orderId)});
+        return rows > 0;
+    }
+    
+    public boolean updateAdminNotes(int orderId, String notes) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("admin_notes", notes);
+        
+        int rows = db.update(TABLE_ORDERS, values, "id=?", new String[]{String.valueOf(orderId)});
+        return rows > 0;
+    }
+    
+    private Order extractOrderFromCursor(Cursor cursor) {
+        Order order = new Order();
+        order.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+        order.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow("user_id")));
+        order.setOrderDate(cursor.getString(cursor.getColumnIndexOrThrow("order_date")));
+        order.setTotalAmount(cursor.getDouble(cursor.getColumnIndexOrThrow("total_amount")));
+        order.setStatus(cursor.getString(cursor.getColumnIndexOrThrow("status")));
+        order.setShippingAddress(cursor.getString(cursor.getColumnIndexOrThrow("shipping_address")));
+        order.setPaymentMethod(cursor.getString(cursor.getColumnIndexOrThrow("payment_method")));
+        
+        // Extended fields
+        int shipperNameIndex = cursor.getColumnIndex("shipper_name");
+        if (shipperNameIndex >= 0) order.setShipperName(cursor.getString(shipperNameIndex));
+        
+        int shipperPhoneIndex = cursor.getColumnIndex("shipper_phone");
+        if (shipperPhoneIndex >= 0) order.setShipperPhone(cursor.getString(shipperPhoneIndex));
+        
+        int trackingCodeIndex = cursor.getColumnIndex("tracking_code");
+        if (trackingCodeIndex >= 0) order.setTrackingCode(cursor.getString(trackingCodeIndex));
+        
+        int cancelledReasonIndex = cursor.getColumnIndex("cancelled_reason");
+        if (cancelledReasonIndex >= 0) order.setCancelledReason(cursor.getString(cancelledReasonIndex));
+        
+        int adminNotesIndex = cursor.getColumnIndex("admin_notes");
+        if (adminNotesIndex >= 0) order.setAdminNotes(cursor.getString(adminNotesIndex));
+        
+        int confirmedAtIndex = cursor.getColumnIndex("confirmed_at");
+        if (confirmedAtIndex >= 0) order.setConfirmedAt(cursor.getString(confirmedAtIndex));
+        
+        int shippedAtIndex = cursor.getColumnIndex("shipped_at");
+        if (shippedAtIndex >= 0) order.setShippedAt(cursor.getString(shippedAtIndex));
+        
+        int completedAtIndex = cursor.getColumnIndex("completed_at");
+        if (completedAtIndex >= 0) order.setCompletedAt(cursor.getString(completedAtIndex));
+        
+        int cancelledAtIndex = cursor.getColumnIndex("cancelled_at");
+        if (cancelledAtIndex >= 0) order.setCancelledAt(cursor.getString(cancelledAtIndex));
+        
+        return order;
     }
 }

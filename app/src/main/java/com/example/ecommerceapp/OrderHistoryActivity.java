@@ -102,7 +102,7 @@ public class OrderHistoryActivity extends AppCompatActivity {
 
     private void setupTabs() {
         tabLayout.addTab(tabLayout.newTab().setText("Tất cả"));
-        tabLayout.addTab(tabLayout.newTab().setText("Chờ xác nhận"));
+        tabLayout.addTab(tabLayout.newTab().setText("Chờ XN"));
         tabLayout.addTab(tabLayout.newTab().setText("Đang giao"));
         tabLayout.addTab(tabLayout.newTab().setText("Hoàn thành"));
         tabLayout.addTab(tabLayout.newTab().setText("Đã hủy"));
@@ -116,20 +116,20 @@ public class OrderHistoryActivity extends AppCompatActivity {
                         filterOrders("all");
                         break;
                     case 1:
-                        currentFilter = "Chờ xác nhận";
-                        filterOrders("Chờ xác nhận");
+                        currentFilter = Order.STATUS_PENDING;
+                        filterOrders(Order.STATUS_PENDING);
                         break;
                     case 2:
-                        currentFilter = "Đang giao hàng";
-                        filterOrders("Đang giao hàng");
+                        currentFilter = Order.STATUS_SHIPPING;
+                        filterOrders(Order.STATUS_SHIPPING);
                         break;
                     case 3:
-                        currentFilter = "Hoàn thành";
-                        filterOrders("Hoàn thành");
+                        currentFilter = Order.STATUS_COMPLETED;
+                        filterOrders(Order.STATUS_COMPLETED);
                         break;
                     case 4:
-                        currentFilter = "Đã hủy";
-                        filterOrders("Đã hủy");
+                        currentFilter = Order.STATUS_CANCELLED;
+                        filterOrders(Order.STATUS_CANCELLED);
                         break;
                 }
             }

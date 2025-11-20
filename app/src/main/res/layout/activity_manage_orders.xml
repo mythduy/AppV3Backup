@@ -13,6 +13,18 @@
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
+    <!-- Tabs for filtering orders -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorWhite"
+        app:tabMode="scrollable"
+        app:tabTextColor="@color/colorTextSecondary"
+        app:tabSelectedTextColor="@color/colorPrimary"
+        app:tabIndicatorColor="@color/colorPrimary"
+        app:tabIndicatorHeight="3dp" />
+
     <!-- Statistics Card -->
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
