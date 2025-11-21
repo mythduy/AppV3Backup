@@ -242,6 +242,34 @@
                     android:textStyle="bold"
                     android:textColor="@color/colorTextPrimary"
                     android:letterSpacing="0.02" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSort"
+                    style="@style/Widget.Material3.Button.OutlinedButton.Icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:text="Sắp xếp"
+                    android:textSize="13sp"
+                    app:icon="@drawable/ic_sort"
+                    app:iconSize="18dp"
+                    android:layout_marginEnd="8dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    app:strokeColor="@color/colorPrimary"
+                    app:strokeWidth="1dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnFilter"
+                    style="@style/Widget.Material3.Button.Icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:text="Lọc"
+                    android:textSize="13sp"
+                    app:icon="@drawable/ic_filter"
+                    app:iconSize="18dp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    app:backgroundTint="@color/colorPrimary" />
             </LinearLayout>
 
             <!-- Products -->

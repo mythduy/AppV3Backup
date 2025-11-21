@@ -25,8 +25,8 @@ public class ProductDetailActivity extends AppCompatActivity {
     private ImageView ivProduct;
     private TextView tvName, tvPrice, tvDescription, tvCategory, tvStock;
     private TextView tvSKU, tvWarranty, tvQuantity, tvTotalPrice, tvRating;
-    private TextView tvReviewCount, tvAverageRating;
-    private android.widget.RatingBar ratingBarAverage;
+    private TextView tvReviewCount, tvAverageRating, tvRatingCount, tvSold;
+    private android.widget.RatingBar ratingBarAverage, ratingBarHeader;
     private MaterialButton btnAddToCart, btnBuyNow, btnFavorite, btnShare;
     private MaterialButton btnIncrement, btnDecrement, btnWriteReview;
     private CollapsingToolbarLayout collapsingToolbar;
@@ -84,6 +84,8 @@ public class ProductDetailActivity extends AppCompatActivity {
         tvRating = findViewById(R.id.tvRating);
         tvQuantity = findViewById(R.id.tvQuantity);
         tvTotalPrice = findViewById(R.id.tvTotalPrice);
+        tvRatingCount = findViewById(R.id.tvRatingCount);
+        tvSold = findViewById(R.id.tvSold);
         btnAddToCart = findViewById(R.id.btnAddToCart);
         btnBuyNow = findViewById(R.id.btnBuyNow);
         btnFavorite = findViewById(R.id.btnFavorite);
@@ -95,6 +97,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         tvReviewCount = findViewById(R.id.tvReviewCount);
         tvAverageRating = findViewById(R.id.tvAverageRating);
         ratingBarAverage = findViewById(R.id.ratingBarAverage);
+        ratingBarHeader = findViewById(R.id.ratingBarHeader);
         rvRelatedProducts = findViewById(R.id.rvRelatedProducts);
         tvNoRelatedProducts = findViewById(R.id.tvNoRelatedProducts);
         cardRelatedProducts = findViewById(R.id.cardRelatedProducts);
@@ -163,10 +166,60 @@ public class ProductDetailActivity extends AppCompatActivity {
             
             // Product details
             tvCategory.setText(product.getCategory());
-            tvStock.setText("Còn " + product.getStock() + " sp");
+            
+            // Handle stock display and button states
+            if (product.getStock() <= 0) {
+                tvStock.setText("Hết hàng");
+                tvStock.setTextColor(getResources().getColor(R.color.colorRed));
+                
+                // Disable buttons when out of stock
+                btnAddToCart.setEnabled(false);
+                btnAddToCart.setAlpha(0.5f);
+                btnAddToCart.setText("Hết hàng");
+                
+                btnBuyNow.setEnabled(false);
+                btnBuyNow.setAlpha(0.5f);
+                btnBuyNow.setText("Hết hàng");
+                
+                btnIncrement.setEnabled(false);
+                btnDecrement.setEnabled(false);
+            } else {
+                tvStock.setText("Còn " + product.getStock() + " sp");
+                tvStock.setTextColor(getResources().getColor(R.color.colorGreen));
+                
+                // Enable buttons when in stock
+                btnAddToCart.setEnabled(true);
+                btnAddToCart.setAlpha(1.0f);
+                btnAddToCart.setText("Thêm vào giỏ");
+                
+                btnBuyNow.setEnabled(true);
+                btnBuyNow.setAlpha(1.0f);
+                btnBuyNow.setText("Mua ngay");
+                
+                btnIncrement.setEnabled(true);
+                btnDecrement.setEnabled(true);
+            }
+            
             tvSKU.setText(product.getFormattedSku());
             tvWarranty.setText(product.getWarranty());
-            tvRating.setText(String.format("%.1f", product.getRating()));
+            
+            // Update rating display in header
+            double rating = product.getRating();
+            int reviewCount = dbHelper.getReviewCount(product.getId());
+            
+            if (rating > 0 && reviewCount > 0) {
+                tvRating.setText(String.format("%.1f", rating));
+                tvRatingCount.setText("(" + reviewCount + " đánh giá)");
+                ratingBarHeader.setRating((float) rating);
+            } else {
+                tvRating.setText("0.0");
+                tvRatingCount.setText("(Chưa có đánh giá)");
+                ratingBarHeader.setRating(0);
+            }
+            
+            // Update sold count
+            int soldCount = dbHelper.getProductSoldCount(product.getId());
+            tvSold.setText("Đã bán: " + soldCount);
             
             // Initial quantity and total
             updateQuantityAndTotal();
@@ -182,8 +235,9 @@ public class ProductDetailActivity extends AppCompatActivity {
                         .error(R.drawable.ic_product_placeholder)
                         .centerCrop()
                         .into(ivProduct);
-                } else {
-                    // Try loading as URL (backward compatibility)
+                } else if (product.getImageUrl().startsWith("http://") || 
+                          product.getImageUrl().startsWith("https://")) {
+                    // Try loading as URL if it's a valid URL
                     Glide.with(this)
                         .load(product.getImageUrl())
                         .placeholder(R.drawable.ic_product_placeholder)
@@ -191,6 +245,9 @@ public class ProductDetailActivity extends AppCompatActivity {
                         .diskCacheStrategy(DiskCacheStrategy.ALL)
                         .centerCrop()
                         .into(ivProduct);
+                } else {
+                    // Invalid path - use placeholder
+                    ivProduct.setImageResource(R.drawable.ic_product_placeholder);
                 }
             } else {
                 ivProduct.setImageResource(R.drawable.ic_product_placeholder);
@@ -382,6 +439,25 @@ public class ProductDetailActivity extends AppCompatActivity {
         java.util.List<com.example.ecommerceapp.models.Review> reviews = 
             dbHelper.getProductReviews(product.getId());
         
+        // Update review count
+        int reviewCount = reviews.size();
+        if (reviewCount > 0) {
+            tvReviewCount.setText("(" + reviewCount + " đánh giá)");
+        } else {
+            tvReviewCount.setText("(Chưa có đánh giá)");
+        }
+        
+        // Update average rating
+        double avgRating = product.getRating();
+        if (avgRating > 0) {
+            tvAverageRating.setText(String.format("%.1f", avgRating));
+            ratingBarAverage.setRating((float) avgRating);
+        } else {
+            tvAverageRating.setText("0.0");
+            ratingBarAverage.setRating(0);
+        }
+        
+        // Show/hide reviews list
         if (reviews.isEmpty()) {
             rvReviews.setVisibility(View.GONE);
             layoutEmptyReviews.setVisibility(View.VISIBLE);
@@ -390,15 +466,6 @@ public class ProductDetailActivity extends AppCompatActivity {
             layoutEmptyReviews.setVisibility(View.GONE);
             reviewAdapter.updateReviews(reviews);
         }
-        
-        // Update review count
-        int reviewCount = dbHelper.getReviewCount(product.getId());
-        tvReviewCount.setText("(" + reviewCount + " đánh giá)");
-        
-        // Update average rating
-        double avgRating = product.getRating();
-        tvAverageRating.setText(String.format("%.1f", avgRating));
-        ratingBarAverage.setRating((float) avgRating);
     }
 
     private void loadRelatedProducts() {
@@ -491,10 +558,18 @@ public class ProductDetailActivity extends AppCompatActivity {
         
         // Update rating text when rating changes
         ratingBar.setOnRatingBarChangeListener((bar, rating, fromUser) -> {
-            String[] ratingTexts = {"Rất tệ", "Tệ", "Bình thường", "Tốt", "Rất tốt", "Tuyệt vời"};
-            int index = (int) rating;
-            if (index > 0 && index <= ratingTexts.length) {
-                tvRatingText.setText(ratingTexts[index - 1]);
+            if (rating == 0) {
+                tvRatingText.setText("");
+            } else if (rating == 1) {
+                tvRatingText.setText("Rất tệ");
+            } else if (rating == 2) {
+                tvRatingText.setText("Tệ");
+            } else if (rating == 3) {
+                tvRatingText.setText("Bình thường");
+            } else if (rating == 4) {
+                tvRatingText.setText("Tốt");
+            } else if (rating == 5) {
+                tvRatingText.setText("Tuyệt vời");
             }
         });
         
@@ -518,8 +593,22 @@ public class ProductDetailActivity extends AppCompatActivity {
             if (result != -1) {
                 Toast.makeText(this, "✅ Cảm ơn bạn đã đánh giá", Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
-                // Reload product and reviews
-                loadProductDetails(product.getId());
+                
+                // Reload product để lấy rating mới (đã được update trong addReview)
+                product = dbHelper.getProductById(product.getId());
+                if (product != null) {
+                    // Update rating display in header
+                    int reviewCount = dbHelper.getReviewCount(product.getId());
+                    tvRating.setText(String.format("%.1f", product.getRating()));
+                    tvRatingCount.setText("(" + reviewCount + " đánh giá)");
+                    ratingBarHeader.setRating((float) product.getRating());
+                    
+                    // Update rating display in review section
+                    tvAverageRating.setText(String.format("%.1f", product.getRating()));
+                    ratingBarAverage.setRating((float) product.getRating());
+                }
+                
+                // Reload reviews list
                 loadReviews();
             } else {
                 Toast.makeText(this, "❌ Lỗi khi gửi đánh giá", Toast.LENGTH_SHORT).show();

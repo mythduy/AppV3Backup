@@ -29,7 +29,7 @@ public class OrderDetailActivity extends AppCompatActivity {
     private TextView tvSubtotal, tvShipping, tvTotal, tvCancelledReason;
     private RecyclerView rvOrderItems;
     private MaterialButton btnCancelOrder;
-    private android.widget.LinearLayout layoutCancelledReason;
+    private androidx.cardview.widget.CardView layoutCancelledReason;
     private OrderDetailAdapter adapter;
     private DatabaseHelper dbHelper;
     private int orderId;

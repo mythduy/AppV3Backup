@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:padding="24dp"
+    android:background="@android:color/white">
 
     <!-- Title -->
     <TextView
@@ -49,7 +50,7 @@
             android:id="@+id/tvRatingText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Rất hài lòng"
+            android:text="Tuyệt vời"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="@color/colorAccent"

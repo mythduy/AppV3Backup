@@ -85,6 +85,9 @@ public class CheckoutActivity extends AppCompatActivity {
         btnPlaceOrder.setOnClickListener(v -> placeOrder());
         btnChange.setOnClickListener(v -> showAddressSelectionDialog());
         btnAddNewAddress.setOnClickListener(v -> openAddAddressActivity());
+        
+        // Initially hide add new button (will show if no address exists)
+        btnAddNewAddress.setVisibility(View.GONE);
     }
     
     private void openAddAddressActivity() {
@@ -135,9 +138,25 @@ public class CheckoutActivity extends AppCompatActivity {
     private void loadDefaultShippingAddress() {
         selectedAddress = dbHelper.getDefaultShippingAddress(userId);
         if (selectedAddress != null) {
+            // Reset text color to default
+            tvDefaultAddress.setTextColor(getResources().getColor(R.color.colorTextSecondary));
             tvDefaultAddress.setText(selectedAddress.getFullAddress());
+            
+            // Show appropriate badge
+            if (selectedAddress.isDefault()) {
+                tvDefaultAddress.append(" (Mặc định)");
+            }
+            
+            // Make sure buttons are visible when address is loaded
+            btnChange.setVisibility(View.VISIBLE);
+            btnAddNewAddress.setVisibility(View.GONE);
         } else {
-            tvDefaultAddress.setText("Chưa có địa chỉ mặc định. Vui lòng thêm địa chỉ.");
+            tvDefaultAddress.setText("⚠️ Chưa có địa chỉ giao hàng. Vui lòng thêm địa chỉ để tiếp tục.");
+            tvDefaultAddress.setTextColor(getResources().getColor(android.R.color.holo_orange_dark));
+            
+            // Show add button when no address
+            btnChange.setVisibility(View.GONE);
+            btnAddNewAddress.setVisibility(View.VISIBLE);
         }
     }
 
@@ -162,18 +181,26 @@ public class CheckoutActivity extends AppCompatActivity {
         RecyclerView rvAddresses = dialogView.findViewById(R.id.rvAddresses);
         MaterialButton btnAddNew = dialogView.findViewById(R.id.btnAddNewAddress);
         MaterialButton btnCancel = dialogView.findViewById(R.id.btnCancelDialog);
+        MaterialButton btnConfirm = dialogView.findViewById(R.id.btnConfirmAddress);
         
         rvAddresses.setLayoutManager(new LinearLayoutManager(this));
         
         AddressSelectionAdapter adapter = new AddressSelectionAdapter(addresses, address -> {
-            // Address selected in adapter
+            // Enable confirm button when address is selected
+            btnConfirm.setEnabled(true);
+            btnConfirm.setText("Chọn địa chỉ này");
         });
         rvAddresses.setAdapter(adapter);
+        
+        // Disable confirm button initially if no address is pre-selected
+        btnConfirm.setEnabled(false);
+        btnConfirm.setText("Chọn");
         
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setView(dialogView);
         androidx.appcompat.app.AlertDialog dialog = builder.create();
         
+        // Button "Thêm mới" - Open AddEditAddressActivity
         btnAddNew.setOnClickListener(v -> {
             dialog.dismiss();
             Intent intent = new Intent(this, AddEditAddressActivity.class);
@@ -181,14 +208,30 @@ public class CheckoutActivity extends AppCompatActivity {
             startActivityForResult(intent, 200);
         });
         
+        // Button "Hủy" - Just close dialog without changing anything
         btnCancel.setOnClickListener(v -> {
+            dialog.dismiss();
+        });
+        
+        // Button "Ch\u1ecdn" - Apply selected address
+        btnConfirm.setOnClickListener(v -> {
             ShippingAddress selected = adapter.getSelectedAddress();
             if (selected != null) {
                 selectedAddress = selected;
+                
+                // Reset text color to default
+                tvDefaultAddress.setTextColor(getResources().getColor(R.color.colorTextSecondary));
                 tvDefaultAddress.setText(selected.getFullAddress());
+                
+                // Show appropriate badge
+                if (selected.isDefault()) {
+                    tvDefaultAddress.append(" (M\u1eb7c \u0111\u1ecbnh)");
+                }
+                
+                Toast.makeText(this, "\u2705 \u0110\u00e3 ch\u1ecdn \u0111\u1ecba ch\u1ec9 giao h\u00e0ng", Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
             } else {
-                dialog.dismiss();
+                Toast.makeText(this, "\u26a0\ufe0f Vui l\u00f2ng ch\u1ecdn m\u1ed9t \u0111\u1ecba ch\u1ec9", Toast.LENGTH_SHORT).show();
             }
         });
         
@@ -199,7 +242,13 @@ public class CheckoutActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 200 && resultCode == RESULT_OK) {
+            // Reload address after adding/editing
             loadDefaultShippingAddress();
+            
+            // Show success message
+            if (selectedAddress != null) {
+                Toast.makeText(this, "✅ Đã cập nhật địa chỉ giao hàng", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -224,7 +273,17 @@ public class CheckoutActivity extends AppCompatActivity {
 
     private void placeOrder() {
         if (selectedAddress == null) {
-            Toast.makeText(this, "Vui lòng chọn địa chỉ nhận hàng", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "⚠️ Vui lòng thêm địa chỉ giao hàng trước khi đặt hàng", Toast.LENGTH_LONG).show();
+            
+            // Prompt user to add address
+            new MaterialAlertDialogBuilder(this)
+                .setTitle("Chưa có địa chỉ giao hàng")
+                .setMessage("Bạn cần thêm địa chỉ giao hàng để hoàn tất đơn hàng. Thêm ngay?")
+                .setPositiveButton("Thêm địa chỉ", (dialog, which) -> {
+                    openAddAddressActivity();
+                })
+                .setNegativeButton("Để sau", null)
+                .show();
             return;
         }
 

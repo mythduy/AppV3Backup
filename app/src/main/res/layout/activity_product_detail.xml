@@ -178,46 +178,16 @@
                         android:layout_marginBottom="16dp">
 
                         <!-- Rating Stars -->
-                        <LinearLayout
+                        <RatingBar
+                            android:id="@+id/ratingBarHeader"
+                            style="@style/Widget.AppCompat.RatingBar.Small"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal">
-
-                            <ImageView
-                                android:layout_width="18dp"
-                                android:layout_height="18dp"
-                                android:src="@drawable/ic_star"
-                                app:tint="@color/colorOrange" />
-
-                            <ImageView
-                                android:layout_width="18dp"
-                                android:layout_height="18dp"
-                                android:src="@drawable/ic_star"
-                                app:tint="@color/colorOrange"
-                                android:layout_marginStart="2dp" />
-
-                            <ImageView
-                                android:layout_width="18dp"
-                                android:layout_height="18dp"
-                                android:src="@drawable/ic_star"
-                                app:tint="@color/colorOrange"
-                                android:layout_marginStart="2dp" />
-
-                            <ImageView
-                                android:layout_width="18dp"
-                                android:layout_height="18dp"
-                                android:src="@drawable/ic_star"
-                                app:tint="@color/colorOrange"
-                                android:layout_marginStart="2dp" />
-
-                            <ImageView
-                                android:layout_width="18dp"
-                                android:layout_height="18dp"
-                                android:src="@drawable/ic_star"
-                                app:tint="@color/gray_300"
-                                android:layout_marginStart="2dp" />
-
-                        </LinearLayout>
+                            android:numStars="5"
+                            android:rating="0"
+                            android:stepSize="0.5"
+                            android:isIndicator="true"
+                            android:progressTint="@color/colorOrange" />
 
                         <TextView
                             android:id="@+id/tvRating"
@@ -230,9 +200,10 @@
                             android:layout_marginStart="8dp" />
 
                         <TextView
+                            android:id="@+id/tvRatingCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="(128 reviews)"
+                            android:text="(Chưa có đánh giá)"
                             android:textSize="13sp"
                             android:textColor="@color/colorTextSecondary"
                             android:layout_marginStart="4dp" />
@@ -247,7 +218,7 @@
                             android:id="@+id/tvSold"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Đã bán: 245"
+                            android:text="Đã bán: 0"
                             android:textSize="13sp"
                             android:textColor="@color/colorTextSecondary" />
 
@@ -759,7 +730,7 @@
                                 android:id="@+id/tvAverageRating"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="4.5"
+                                android:text="0.0"
                                 android:textSize="32sp"
                                 android:textStyle="bold"
                                 android:textColor="@color/colorAccent" />
@@ -770,7 +741,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:numStars="5"
-                                android:rating="4.5"
+                                android:rating="0"
                                 android:stepSize="0.5"
                                 android:isIndicator="true"
                                 android:layout_marginTop="4dp"

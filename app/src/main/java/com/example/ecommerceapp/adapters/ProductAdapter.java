@@ -75,7 +75,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
     class ProductViewHolder extends RecyclerView.ViewHolder {
         CardView cardView;
         ImageView ivProduct, ivFavorite;
-        TextView tvName, tvPrice, tvStock, tvBadge;
+        TextView tvName, tvPrice, tvStock, tvBadge, tvOutOfStock;
         ImageButton btnAddToCart;
 
         ProductViewHolder(@NonNull View itemView) {
@@ -87,6 +87,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
             tvPrice = itemView.findViewById(R.id.tvPrice);
             tvStock = itemView.findViewById(R.id.tvStock);
             tvBadge = itemView.findViewById(R.id.tvBadge);
+            tvOutOfStock = itemView.findViewById(R.id.tvOutOfStock);
             btnAddToCart = itemView.findViewById(R.id.btnAddToCart);
 
             itemView.setOnClickListener(v -> {
@@ -122,20 +123,45 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
                 tvPrice.setText(formatPrice(product.getPrice()));
             }
 
-            if (product.getStock() > 0) {
-                tvStock.setText("Còn: " + product.getStock());
-                tvStock.setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.colorGreen));
-            } else {
+            // Handle out of stock display
+            boolean isOutOfStock = product.getStock() <= 0;
+            
+            if (isOutOfStock) {
+                // Show out of stock badge
+                tvOutOfStock.setVisibility(View.VISIBLE);
                 tvStock.setText("Hết hàng");
                 tvStock.setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.colorRed));
+                
+                // Apply opacity to image and text
+                ivProduct.setAlpha(0.5f);
+                tvName.setAlpha(0.6f);
+                tvPrice.setAlpha(0.6f);
+                
+                // Disable and grey out add to cart button
+                btnAddToCart.setEnabled(false);
+                btnAddToCart.setAlpha(0.4f);
+            } else {
+                // Hide out of stock badge
+                tvOutOfStock.setVisibility(View.GONE);
+                tvStock.setText("Còn: " + product.getStock());
+                tvStock.setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.colorGreen));
+                
+                // Reset opacity
+                ivProduct.setAlpha(1.0f);
+                tvName.setAlpha(1.0f);
+                tvPrice.setAlpha(1.0f);
+                
+                // Enable add to cart button
+                btnAddToCart.setEnabled(true);
+                btnAddToCart.setAlpha(1.0f);
             }
 
-            // Show badge based on product flags from database
-            if (product.isNew()) {
+            // Show badge based on product flags (only if not out of stock)
+            if (!isOutOfStock && product.isNew()) {
                 tvBadge.setVisibility(View.VISIBLE);
                 tvBadge.setText("MỚI");
                 tvBadge.setBackgroundResource(R.drawable.badge_new);
-            } else if (product.isHot()) {
+            } else if (!isOutOfStock && product.isHot()) {
                 tvBadge.setVisibility(View.VISIBLE);
                 tvBadge.setText("HOT");
                 tvBadge.setBackgroundResource(R.drawable.badge_hot);

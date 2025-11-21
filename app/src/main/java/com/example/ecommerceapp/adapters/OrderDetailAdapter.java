@@ -8,8 +8,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.bumptech.glide.Glide;
 import com.example.ecommerceapp.R;
 import com.example.ecommerceapp.models.OrderItem;
+import java.io.File;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,7 +67,34 @@ public class OrderDetailAdapter extends RecyclerView.Adapter<OrderDetailAdapter.
             tvQuantity.setText("x" + item.getQuantity());
             tvPrice.setText(formatPrice(item.getPrice()));
             tvTotal.setText(formatPrice(item.getTotalPrice()));
-            ivProduct.setImageResource(R.drawable.ic_product_placeholder);
+            
+            // Load product image with Glide
+            String imageUrl = item.getImageUrl();
+            if (imageUrl != null && !imageUrl.isEmpty()) {
+                File imageFile = new File(imageUrl);
+                if (imageFile.exists()) {
+                    Glide.with(context)
+                        .load(imageFile)
+                        .placeholder(R.drawable.ic_product_placeholder)
+                        .error(R.drawable.ic_product_placeholder)
+                        .centerCrop()
+                        .into(ivProduct);
+                } else {
+                    // Try loading from assets
+                    try {
+                        Glide.with(context)
+                            .load("file:///android_asset/" + imageUrl)
+                            .placeholder(R.drawable.ic_product_placeholder)
+                            .error(R.drawable.ic_product_placeholder)
+                            .centerCrop()
+                            .into(ivProduct);
+                    } catch (Exception e) {
+                        ivProduct.setImageResource(R.drawable.ic_product_placeholder);
+                    }
+                }
+            } else {
+                ivProduct.setImageResource(R.drawable.ic_product_placeholder);
+            }
         }
 
         String formatPrice(double price) {

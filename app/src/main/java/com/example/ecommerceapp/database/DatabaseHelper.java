@@ -64,7 +64,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "category TEXT, " +
                 "stock INTEGER, " +
                 "image_url TEXT, " +
-                "rating REAL DEFAULT 4.5, " +
+                "rating REAL DEFAULT 0.0, " +
                 "sku TEXT, " +
                 "warranty TEXT DEFAULT '12 tháng', " +
                 "discount REAL DEFAULT 0, " +
@@ -605,6 +605,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
             if (orderId != -1) {
                 for (CartItem item : cartItems) {
+                    // Check stock before creating order item
+                    Product product = getProductById(item.getProductId());
+                    if (product.getStock() < item.getQuantity()) {
+                        // Insufficient stock - rollback transaction
+                        return -1;
+                    }
+                    
                     ContentValues itemValues = new ContentValues();
                     itemValues.put("order_id", orderId);
                     itemValues.put("product_id", item.getProductId());
@@ -612,9 +619,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     itemValues.put("price", item.getProductPrice());
                     db.insert(TABLE_ORDER_ITEMS, null, itemValues);
 
-                    // Update product stock
-                    Product product = getProductById(item.getProductId());
-                    int newStock = product.getStock() - item.getQuantity();
+                    // Update product stock - ensure it doesn't go below 0
+                    int newStock = Math.max(0, product.getStock() - item.getQuantity());
                     ContentValues stockValues = new ContentValues();
                     stockValues.put("stock", newStock);
                     db.update(TABLE_PRODUCTS, stockValues, "id=?",
@@ -698,6 +704,100 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         cursor.close();
         return count;
+    }
+
+    // Advanced filter method
+    public List<Product> getFilteredProducts(String category, String priceRange, 
+                                             double minRating, boolean hasDiscount,
+                                             boolean isHot, boolean isNew, 
+                                             boolean inStockOnly, String sortBy) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        StringBuilder query = new StringBuilder("SELECT * FROM " + TABLE_PRODUCTS + " WHERE 1=1");
+        List<String> selectionArgs = new ArrayList<>();
+        
+        // Category filter
+        if (category != null && !category.equals("all")) {
+            query.append(" AND category = ?");
+            selectionArgs.add(category);
+        }
+        
+        // Price range filter
+        if (priceRange != null && !priceRange.equals("all")) {
+            switch (priceRange) {
+                case "under_50k":
+                    query.append(" AND price < 50000");
+                    break;
+                case "50k_100k":
+                    query.append(" AND price BETWEEN 50000 AND 100000");
+                    break;
+                case "100k_500k":
+                    query.append(" AND price BETWEEN 100000 AND 500000");
+                    break;
+                case "500k_1m":
+                    query.append(" AND price BETWEEN 500000 AND 1000000");
+                    break;
+                case "over_1m":
+                    query.append(" AND price > 1000000");
+                    break;
+            }
+        }
+        
+        // Rating filter
+        if (minRating > 0) {
+            query.append(" AND rating >= ?");
+            selectionArgs.add(String.valueOf(minRating));
+        }
+        
+        // Discount filter
+        if (hasDiscount) {
+            query.append(" AND discount > 0");
+        }
+        
+        // Hot filter
+        if (isHot) {
+            query.append(" AND is_hot = 1");
+        }
+        
+        // New filter
+        if (isNew) {
+            query.append(" AND is_new = 1");
+        }
+        
+        // Stock filter
+        if (inStockOnly) {
+            query.append(" AND stock > 0");
+        }
+        
+        // Sort
+        String orderBy = "";
+        if (sortBy != null) {
+            switch (sortBy) {
+                case "price_asc":
+                    orderBy = " ORDER BY price ASC";
+                    break;
+                case "price_desc":
+                    orderBy = " ORDER BY price DESC";
+                    break;
+                case "name_asc":
+                    orderBy = " ORDER BY name ASC";
+                    break;
+                case "rating_desc":
+                    orderBy = " ORDER BY rating DESC";
+                    break;
+                case "newest":
+                    orderBy = " ORDER BY id DESC";
+                    break;
+                default:
+                    orderBy = " ORDER BY id DESC";
+            }
+        } else {
+            orderBy = " ORDER BY id DESC";
+        }
+        query.append(orderBy);
+        
+        Cursor cursor = db.rawQuery(query.toString(), 
+                                    selectionArgs.toArray(new String[0]));
+        return extractProductsFromCursor(cursor);
     }
 
     public Order getOrderById(int orderId) {
@@ -1270,7 +1370,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         List<Review> reviews = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
         
-        String query = "SELECT r.*, u.full_name, u.avatar_url " +
+        // Use COALESCE to handle NULL avatar_url
+        String query = "SELECT r.*, u.full_name, COALESCE(u.avatar_url, '') as avatar_url " +
                       "FROM " + TABLE_REVIEWS + " r " +
                       "INNER JOIN " + TABLE_USERS + " u ON r.user_id = u.id " +
                       "WHERE r.product_id = ? " +
@@ -1289,9 +1390,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 review.setReviewDate(cursor.getString(cursor.getColumnIndexOrThrow("review_date")));
                 review.setUserName(cursor.getString(cursor.getColumnIndexOrThrow("full_name")));
                 
+                // Get avatar with proper null handling
                 int avatarIndex = cursor.getColumnIndex("avatar_url");
                 if (avatarIndex >= 0) {
-                    review.setUserAvatar(cursor.getString(avatarIndex));
+                    String avatarUrl = cursor.getString(avatarIndex);
+                    // Set to null if empty string to maintain consistency
+                    review.setUserAvatar(avatarUrl != null && !avatarUrl.isEmpty() ? avatarUrl : null);
                 }
                 
                 reviews.add(review);
@@ -1340,11 +1444,33 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String query = "SELECT AVG(rating) FROM " + TABLE_REVIEWS + " WHERE product_id = ?";
         Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(productId)});
         
-        if (cursor.moveToFirst()) {
+        ContentValues values = new ContentValues();
+        if (cursor.moveToFirst() && !cursor.isNull(0)) {
             double avgRating = cursor.getDouble(0);
-            ContentValues values = new ContentValues();
             values.put("rating", avgRating);
-            db.update(TABLE_PRODUCTS, values, "id=?", new String[]{String.valueOf(productId)});
+        } else {
+            // No reviews - set rating to 0
+            values.put("rating", 0.0);
+        }
+        db.update(TABLE_PRODUCTS, values, "id=?", new String[]{String.valueOf(productId)});
+        cursor.close();
+    }
+    
+    // Fix ratings for all products - set to 0 if no reviews
+    public void fixProductRatings() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        
+        // Update all products: set rating = 0 if they have no reviews
+        String query = "UPDATE " + TABLE_PRODUCTS + " " +
+                      "SET rating = 0.0 " +
+                      "WHERE id NOT IN (SELECT DISTINCT product_id FROM " + TABLE_REVIEWS + ")";
+        db.execSQL(query);
+        
+        // Recalculate rating for products that have reviews
+        Cursor cursor = db.rawQuery("SELECT DISTINCT product_id FROM " + TABLE_REVIEWS, null);
+        while (cursor.moveToNext()) {
+            int productId = cursor.getInt(0);
+            updateProductAverageRating(productId);
         }
         cursor.close();
     }
@@ -1362,12 +1488,46 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return count;
     }
 
+    public int getProductSoldCount(int productId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        
+        // Count total quantity sold from order_items where order status is completed
+        String query = "SELECT SUM(oi.quantity) " +
+                      "FROM " + TABLE_ORDER_ITEMS + " oi " +
+                      "INNER JOIN " + TABLE_ORDERS + " o ON oi.order_id = o.id " +
+                      "WHERE oi.product_id = ? AND o.status = 'completed'";
+        
+        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(productId)});
+        
+        int soldCount = 0;
+        if (cursor.moveToFirst() && !cursor.isNull(0)) {
+            soldCount = cursor.getInt(0);
+        }
+        cursor.close();
+        return soldCount;
+    }
+
     // ==================== SHIPPING ADDRESSES OPERATIONS ====================
     
     public long addShippingAddress(int userId, String fullName, String phone, 
                                    String province, String district, String ward, 
                                    String addressDetail, boolean isDefault) {
         SQLiteDatabase db = this.getWritableDatabase();
+        
+        // Check if user has any existing addresses
+        Cursor cursor = db.query(TABLE_SHIPPING_ADDRESSES, new String[]{"COUNT(*)"}, 
+                                "user_id=?", new String[]{String.valueOf(userId)}, 
+                                null, null, null);
+        boolean hasExistingAddresses = false;
+        if (cursor.moveToFirst()) {
+            hasExistingAddresses = cursor.getInt(0) > 0;
+        }
+        cursor.close();
+        
+        // If this is the first address, automatically set as default
+        if (!hasExistingAddresses) {
+            isDefault = true;
+        }
         
         // If this is default address, unset all other default addresses
         if (isDefault) {
@@ -1419,6 +1579,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     
     public com.example.ecommerceapp.models.ShippingAddress getDefaultShippingAddress(int userId) {
         SQLiteDatabase db = this.getReadableDatabase();
+        
+        // First try to get default address
         Cursor cursor = db.query(TABLE_SHIPPING_ADDRESSES, null, 
                 "user_id=? AND is_default=1",
                 new String[]{String.valueOf(userId)}, null, null, null);
@@ -1437,6 +1599,28 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             address.setDefault(true);
         }
         cursor.close();
+        
+        // If no default address found, get the most recent address
+        if (address == null) {
+            cursor = db.query(TABLE_SHIPPING_ADDRESSES, null, 
+                    "user_id=?",
+                    new String[]{String.valueOf(userId)}, null, null, "id DESC", "1");
+            
+            if (cursor.moveToFirst()) {
+                address = new com.example.ecommerceapp.models.ShippingAddress();
+                address.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+                address.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow("user_id")));
+                address.setFullName(cursor.getString(cursor.getColumnIndexOrThrow("full_name")));
+                address.setPhone(cursor.getString(cursor.getColumnIndexOrThrow("phone")));
+                address.setProvince(cursor.getString(cursor.getColumnIndexOrThrow("province")));
+                address.setDistrict(cursor.getString(cursor.getColumnIndexOrThrow("district")));
+                address.setWard(cursor.getString(cursor.getColumnIndexOrThrow("ward")));
+                address.setAddressDetail(cursor.getString(cursor.getColumnIndexOrThrow("address_detail")));
+                address.setDefault(cursor.getInt(cursor.getColumnIndexOrThrow("is_default")) == 1);
+            }
+            cursor.close();
+        }
+        
         return address;
     }
     

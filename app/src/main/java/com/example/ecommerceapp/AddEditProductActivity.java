@@ -34,7 +34,7 @@ import java.io.InputStream;
 import java.util.List;
 
 public class AddEditProductActivity extends AppCompatActivity {
-    private EditText etName, etSku, etDescription, etPrice, etDiscount, etStock, etRating, etWarranty;
+    private EditText etName, etSku, etDescription, etPrice, etDiscount, etStock, etWarranty;
     private ImageView ivProductPreview;
     private MaterialButton btnPickFromGallery, btnTakePhoto;
     private Spinner spinnerCategory;
@@ -67,7 +67,6 @@ public class AddEditProductActivity extends AppCompatActivity {
         etPrice = findViewById(R.id.etPrice);
         etDiscount = findViewById(R.id.etDiscount);
         etStock = findViewById(R.id.etStock);
-        etRating = findViewById(R.id.etRating);
         etWarranty = findViewById(R.id.etWarranty);
         ivProductPreview = findViewById(R.id.ivProductPreview);
         btnPickFromGallery = findViewById(R.id.btnPickFromGallery);
@@ -253,7 +252,6 @@ public class AddEditProductActivity extends AppCompatActivity {
             etPrice.setText(String.valueOf(product.getPrice()));
             etDiscount.setText(String.valueOf(product.getDiscount()));
             etStock.setText(String.valueOf(product.getStock()));
-            etRating.setText(String.valueOf(product.getRating()));
             etWarranty.setText(product.getWarranty());
             
             // Load existing image
@@ -290,7 +288,6 @@ public class AddEditProductActivity extends AppCompatActivity {
         String priceStr = etPrice.getText().toString().trim();
         String discountStr = etDiscount.getText().toString().trim();
         String stockStr = etStock.getText().toString().trim();
-        String ratingStr = etRating.getText().toString().trim();
         String warranty = etWarranty.getText().toString().trim();
         String category = spinnerCategory.getSelectedItem().toString();
 
@@ -313,7 +310,7 @@ public class AddEditProductActivity extends AppCompatActivity {
             return;
         }
 
-        double price, discount = 0, rating = 4.5;
+        double price, discount = 0;
         int stock;
         
         try {
@@ -323,12 +320,8 @@ public class AddEditProductActivity extends AppCompatActivity {
             if (!discountStr.isEmpty()) {
                 discount = Double.parseDouble(discountStr);
             }
-            
-            if (!ratingStr.isEmpty()) {
-                rating = Double.parseDouble(ratingStr);
-            }
         } catch (NumberFormatException e) {
-            Toast.makeText(this, "Giá, số lượng, giảm giá và đánh giá phải là số hợp lệ", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Giá, số lượng và giảm giá phải là số hợp lệ", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -351,12 +344,6 @@ public class AddEditProductActivity extends AppCompatActivity {
             return;
         }
 
-        if (rating < 0 || rating > 5) {
-            etRating.setError("Đánh giá phải từ 0-5");
-            etRating.requestFocus();
-            return;
-        }
-
         boolean success;
         if (isEditMode) {
             product.setName(name);
@@ -365,7 +352,6 @@ public class AddEditProductActivity extends AppCompatActivity {
             product.setPrice(price);
             product.setDiscount(discount);
             product.setStock(stock);
-            product.setRating(rating);
             product.setWarranty(warranty.isEmpty() ? "12 tháng" : warranty);
             if (selectedImagePath != null) {
                 product.setImageUrl(selectedImagePath);
@@ -391,7 +377,7 @@ public class AddEditProductActivity extends AppCompatActivity {
             newProduct.setPrice(price);
             newProduct.setDiscount(discount);
             newProduct.setStock(stock);
-            newProduct.setRating(rating);
+            newProduct.setRating(0.0); // Rating will be calculated from reviews
             newProduct.setWarranty(warranty.isEmpty() ? "12 tháng" : warranty);
             newProduct.setImageUrl(selectedImagePath != null ? selectedImagePath : "");
             newProduct.setCategory(category);

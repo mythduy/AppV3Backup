@@ -41,15 +41,24 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
         holder.ratingBar.setRating(review.getRating());
         holder.tvRating.setText(String.format("%.1f", review.getRating()));
         
-        // Load user avatar
-        if (review.getUserAvatar() != null && !review.getUserAvatar().isEmpty()) {
-            Glide.with(context)
-                .load(review.getUserAvatar())
-                .placeholder(R.drawable.ic_avatar_placeholder)
-                .error(R.drawable.ic_avatar_placeholder)
-                .centerCrop()
-                .into(holder.ivUserAvatar);
+        // Load user avatar with proper null checks
+        String avatarUrl = review.getUserAvatar();
+        if (avatarUrl != null && !avatarUrl.isEmpty()) {
+            java.io.File avatarFile = new java.io.File(avatarUrl);
+            if (avatarFile.exists()) {
+                // Load from file path
+                Glide.with(context)
+                    .load(avatarFile)
+                    .circleCrop()
+                    .placeholder(R.drawable.ic_avatar_placeholder)
+                    .error(R.drawable.ic_avatar_placeholder)
+                    .into(holder.ivUserAvatar);
+            } else {
+                // File not found, use placeholder
+                holder.ivUserAvatar.setImageResource(R.drawable.ic_avatar_placeholder);
+            }
         } else {
+            // No avatar URL, use placeholder
             holder.ivUserAvatar.setImageResource(R.drawable.ic_avatar_placeholder);
         }
     }

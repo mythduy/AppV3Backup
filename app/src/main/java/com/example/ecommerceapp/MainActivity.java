@@ -50,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseHelper dbHelper;
     private int userId;
     private int cartCount = 0;
+    private com.example.ecommerceapp.utils.ProductFilterHelper filterHelper;
+    private MaterialButton btnFilter, btnSort;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +70,14 @@ public class MainActivity extends AppCompatActivity {
             // this.deleteDatabase("ecommerce.db");
             
             dbHelper = new DatabaseHelper(this);
+            
+            // Fix product ratings on first launch
+            SharedPreferences appPrefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+            if (!appPrefs.getBoolean("ratings_fixed", false)) {
+                dbHelper.fixProductRatings();
+                appPrefs.edit().putBoolean("ratings_fixed", true).apply();
+            }
+            
             // CHỈ CHẠY 1 LẦN ĐỂ CẬP NHẬT HÌNH ẢNH
             // dbHelper.updateProductImages();
             
@@ -105,6 +115,21 @@ public class MainActivity extends AppCompatActivity {
         rvCategories = findViewById(R.id.rvCategories);
         rvProducts = findViewById(R.id.rvProducts);
         bottomNav = findViewById(R.id.bottomNav);
+        btnFilter = findViewById(R.id.btnFilter);
+        btnSort = findViewById(R.id.btnSort);
+        
+        // Setup filter helper
+        filterHelper = new com.example.ecommerceapp.utils.ProductFilterHelper(
+            this, dbHelper, filteredProducts -> {
+                productAdapter.updateProducts(filteredProducts);
+                if (filteredProducts.isEmpty()) {
+                    Toast.makeText(this, "Không tìm thấy sản phẩm phù hợp", Toast.LENGTH_SHORT).show();
+                }
+            });
+        
+        // Setup filter and sort buttons
+        btnFilter.setOnClickListener(v -> filterHelper.showFilterBottomSheet());
+        btnSort.setOnClickListener(v -> filterHelper.showSortDialog());
         
         // Setup "Xem tất cả" button
         findViewById(R.id.tvViewAllCategories).setOnClickListener(v -> {
