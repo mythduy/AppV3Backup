@@ -9,6 +9,8 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+
+import com.example.ecommerceapp.utils.LogUtil;
 import android.provider.MediaStore;
 import android.widget.Button;
 import android.widget.EditText;
@@ -115,8 +117,8 @@ public class EditProfileActivity extends AppCompatActivity {
             
             Toast.makeText(this, "✅ Đã chọn ảnh thành công", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(this, "❌ Lỗi khi chọn ảnh", Toast.LENGTH_SHORT).show();
+            LogUtil.e("EditProfile", "Error selecting image", e);
+            Toast.makeText(this, "❌ Lỗi khi chọn ảnh: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
     
@@ -146,7 +148,7 @@ public class EditProfileActivity extends AppCompatActivity {
             
             return file.getAbsolutePath();
         } catch (Exception e) {
-            e.printStackTrace();
+            LogUtil.e("EditProfile", "Error saving avatar to storage", e);
             return null;
         }
     }

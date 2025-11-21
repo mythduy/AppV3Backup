@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorBackground"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center">
+
+        <!-- Back Button -->
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="start"
+            android:src="@drawable/ic_arrow_back"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp"
+            android:contentDescription="Back" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="40dp" />
+
+        <!-- Icon -->
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_gravity="center"
+            android:src="@android:drawable/ic_dialog_email"
+            android:tint="@color/colorPrimary"
+            android:contentDescription="Email Icon" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Xác thực OTP"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorTextPrimary"
+            android:fontFamily="sans-serif-medium" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Nhập mã OTP đã được gửi đến"
+            android:textSize="14sp"
+            android:textColor="@color/colorTextSecondary"
+            android:gravity="center" />
+
+        <TextView
+            android:id="@+id/tvEmail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="m***y@gmail.com"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorPrimary" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="32dp" />
+
+        <!-- OTP Input Fields -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:weightSum="6">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etOtp1"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:layout_margin="4dp"
+                android:background="@drawable/otp_box_background"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLength="1"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/colorTextPrimary" />
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etOtp2"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:layout_margin="4dp"
+                android:background="@drawable/otp_box_background"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLength="1"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/colorTextPrimary" />
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etOtp3"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:layout_margin="4dp"
+                android:background="@drawable/otp_box_background"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLength="1"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/colorTextPrimary" />
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etOtp4"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:layout_margin="4dp"
+                android:background="@drawable/otp_box_background"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLength="1"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/colorTextPrimary" />
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etOtp5"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:layout_margin="4dp"
+                android:background="@drawable/otp_box_background"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLength="1"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/colorTextPrimary" />
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etOtp6"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:layout_margin="4dp"
+                android:background="@drawable/otp_box_background"
+                android:gravity="center"
+                android:inputType="number"
+                android:maxLength="1"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/colorTextPrimary" />
+
+        </LinearLayout>
+
+        <!-- Timer -->
+        <TextView
+            android:id="@+id/tvTimer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Mã OTP hết hạn sau: 05:00"
+            android:textSize="14sp"
+            android:textColor="@color/colorTextSecondary" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="24dp" />
+
+        <!-- Verify Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnVerifyOtp"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Xác thực"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            app:cornerRadius="12dp"
+            app:elevation="4dp"
+            app:backgroundTint="@color/colorPrimary" />
+
+        <!-- Resend OTP -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnResendOtp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Gửi lại mã OTP"
+            android:textSize="14sp"
+            android:textColor="@color/colorPrimary"
+            style="@style/Widget.MaterialComponents.Button.TextButton" />
+
+    </LinearLayout>
+
+</ScrollView>

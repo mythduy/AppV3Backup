@@ -225,7 +225,7 @@
                     app:hintTextColor="@color/colorPrimary"
                     app:endIconMode="password_toggle"
                     app:endIconTint="@color/colorTextSecondary"
-                    app:helperText="At least 6 characters"
+                    app:helperText="Ít nhất 8 ký tự, có chữ HOA, chữ thường và số"
                     app:helperTextTextColor="@color/colorTextSecondary"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 

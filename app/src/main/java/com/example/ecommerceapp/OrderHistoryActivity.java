@@ -63,10 +63,10 @@ public class OrderHistoryActivity extends AppCompatActivity {
     
     private int getTabPositionForFilter(String filter) {
         switch (filter) {
-            case "Chờ xác nhận": return 1;
-            case "Đang giao hàng": return 2;
-            case "Hoàn thành": return 3;
-            case "Đã hủy": return 4;
+            case Order.STATUS_PENDING: return 1;
+            case Order.STATUS_SHIPPING: return 2;
+            case Order.STATUS_COMPLETED: return 3;
+            case Order.STATUS_CANCELLED: return 4;
             default: return 0;
         }
     }

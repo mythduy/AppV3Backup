@@ -86,8 +86,30 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
             tvPrice.setText(formatPrice(item.getProductPrice()));
             tvQuantity.setText(String.valueOf(item.getQuantity()));
             tvTotal.setText(formatPrice(item.getTotalPrice()));
-            ivProduct.setImageResource(R.drawable.ic_product_placeholder);
             cbSelect.setChecked(item.isSelected());
+            
+            // Load product image
+            if (item.getImageUrl() != null && !item.getImageUrl().isEmpty()) {
+                java.io.File imageFile = new java.io.File(item.getImageUrl());
+                if (imageFile.exists() && !item.getImageUrl().startsWith("file://")) {
+                    com.bumptech.glide.Glide.with(context)
+                        .load(imageFile)
+                        .placeholder(R.drawable.ic_product_placeholder)
+                        .error(R.drawable.ic_product_placeholder)
+                        .centerCrop()
+                        .into(ivProduct);
+                } else {
+                    com.bumptech.glide.Glide.with(context)
+                        .load(item.getImageUrl())
+                        .placeholder(R.drawable.ic_product_placeholder)
+                        .error(R.drawable.ic_product_placeholder)
+                        .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
+                        .centerCrop()
+                        .into(ivProduct);
+                }
+            } else {
+                ivProduct.setImageResource(R.drawable.ic_product_placeholder);
+            }
 
             // Checkbox listener
             cbSelect.setOnCheckedChangeListener((buttonView, isChecked) -> {

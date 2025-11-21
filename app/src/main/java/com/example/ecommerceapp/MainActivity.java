@@ -19,6 +19,7 @@ import com.example.ecommerceapp.adapters.CategoryAdapter;
 import com.example.ecommerceapp.adapters.ProductAdapter;
 import com.example.ecommerceapp.database.DatabaseHelper;
 import com.example.ecommerceapp.models.Product;
+import com.example.ecommerceapp.utils.LogUtil;
 import com.example.ecommerceapp.models.User;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.badge.BadgeDrawable;
@@ -83,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
 
             loadProducts("all");
         } catch (Exception e) {
-            e.printStackTrace();
+            LogUtil.e("MainActivity", "Error initializing MainActivity", e);
             Toast.makeText(this, "Lỗi: " + e.getMessage(), Toast.LENGTH_LONG).show();
             finish();
         }
@@ -211,9 +212,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupBanner() {
         List<Integer> bannerImages = new ArrayList<>();
-        bannerImages.add(R.drawable.banner_1);
-        bannerImages.add(R.drawable.banner_2);
-        bannerImages.add(R.drawable.banner_3);
+        bannerImages.add(R.drawable.banner1);
+        bannerImages.add(R.drawable.banner2);
+        bannerImages.add(R.drawable.banner3);
 
         BannerAdapter bannerAdapter = new BannerAdapter(bannerImages);
         vpBanner.setAdapter(bannerAdapter);

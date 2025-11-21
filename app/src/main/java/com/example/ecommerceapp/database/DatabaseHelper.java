@@ -6,6 +6,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import com.example.ecommerceapp.models.*;
+import com.example.ecommerceapp.utils.AppConstants;
+import com.example.ecommerceapp.utils.LogUtil;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -233,12 +235,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return db.insert(TABLE_USERS, null, values);
     }
 
-    public User loginUser(String username, String password) {
+    public User loginUser(String usernameOrEmail, String password) {
         SQLiteDatabase db = this.getReadableDatabase();
+        
+        android.util.Log.d("DB_LOGIN", "Login attempt - usernameOrEmail: '" + usernameOrEmail + "', password: '" + password + "'");
+        
+        // Support login with both username and email
         Cursor cursor = db.query(TABLE_USERS, null,
-                "username=? AND password=?",
-                new String[]{username, password},
+                "(username=? OR email=?) AND password=?",
+                new String[]{usernameOrEmail, usernameOrEmail, password},
                 null, null, null);
+
+        android.util.Log.d("DB_LOGIN", "Query result count: " + (cursor != null ? cursor.getCount() : 0));
 
         if (cursor != null && cursor.moveToFirst()) {
             User user = new User();
@@ -249,9 +257,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             user.setPhone(cursor.getString(cursor.getColumnIndexOrThrow("phone")));
             user.setAddress(cursor.getString(cursor.getColumnIndexOrThrow("address")));
             user.setRole(cursor.getString(cursor.getColumnIndexOrThrow("role")));
+            
+            android.util.Log.d("DB_LOGIN", "✅ Login successful - Found user: " + user.getUsername());
+            
             cursor.close();
             return user;
         }
+        
+        android.util.Log.d("DB_LOGIN", "❌ Login failed - No matching user found");
+        
         if (cursor != null) cursor.close();
         return null;
     }
@@ -292,6 +306,41 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put("longitude", user.getLongitude());
         int rows = db.update(TABLE_USERS, values, "id=?",
                 new String[]{String.valueOf(user.getId())});
+        return rows > 0;
+    }
+
+    public User getUserByEmail(String email) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_USERS, null, "email=?",
+                new String[]{email}, null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            User user = new User();
+            user.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
+            user.setUsername(cursor.getString(cursor.getColumnIndexOrThrow("username")));
+            user.setEmail(cursor.getString(cursor.getColumnIndexOrThrow("email")));
+            user.setFullName(cursor.getString(cursor.getColumnIndexOrThrow("full_name")));
+            user.setPhone(cursor.getString(cursor.getColumnIndexOrThrow("phone")));
+            user.setAddress(cursor.getString(cursor.getColumnIndexOrThrow("address")));
+            user.setRole(cursor.getString(cursor.getColumnIndexOrThrow("role")));
+            cursor.close();
+            return user;
+        }
+        if (cursor != null) cursor.close();
+        return null;
+    }
+
+    public boolean updateUserPassword(int userId, String newPassword) {
+        LogUtil.d(AppConstants.TAG_DB_UPDATE, "Updating password for userId: " + userId);
+        
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("password", newPassword);
+        int rows = db.update(TABLE_USERS, values, "id=?",
+                new String[]{String.valueOf(userId)});
+        
+        LogUtil.d(AppConstants.TAG_DB_UPDATE, "Password update result: " + (rows > 0 ? "SUCCESS ✅ (" + rows + " rows)" : "FAILED ❌"));
+        
         return rows > 0;
     }
 
@@ -950,7 +999,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             
             android.util.Log.d("DatabaseHelper", "Migrated " + copiedCount + " product images");
         } catch (Exception e) {
-            e.printStackTrace();
+            android.util.Log.e("DatabaseHelper", "Error migrating product images", e);
         }
     }
     

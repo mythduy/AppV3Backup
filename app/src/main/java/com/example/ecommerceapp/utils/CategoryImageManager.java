@@ -94,8 +94,7 @@ public class CategoryImageManager {
             android.util.Log.d("CategoryImageManager", "Saved new image: " + path);
             return path;
         } catch (Exception e) {
-            e.printStackTrace();
-            android.util.Log.e("CategoryImageManager", "Error saving image: " + e.getMessage());
+            android.util.Log.e("CategoryImageManager", "Error saving image", e);
             return null;
         }
     }
@@ -149,7 +148,7 @@ public class CategoryImageManager {
             
             android.util.Log.d("CategoryImageManager", "Migrated " + migratedCount + " category images");
         } catch (Exception e) {
-            e.printStackTrace();
+            android.util.Log.e("CategoryImageManager", "Error migrating images", e);
         }
     }
     

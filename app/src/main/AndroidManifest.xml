@@ -33,6 +33,9 @@
 
         <activity android:name=".LoginActivity" />
         <activity android:name=".RegisterActivity" />
+        <activity android:name=".ForgotPasswordActivity" />
+        <activity android:name=".VerifyOtpActivity" />
+        <activity android:name=".ResetPasswordActivity" />
         <activity android:name=".MainActivity" />
         <activity android:name=".CategoriesActivity" />
         <activity android:name=".CategoryProductsActivity" />

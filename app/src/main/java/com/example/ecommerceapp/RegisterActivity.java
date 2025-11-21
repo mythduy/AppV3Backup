@@ -11,6 +11,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.ecommerceapp.database.DatabaseHelper;
 import com.example.ecommerceapp.models.User;
+import com.example.ecommerceapp.utils.AppConstants;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.checkbox.MaterialCheckBox;
@@ -83,9 +84,33 @@ public class RegisterActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // Real-time password validation can be added here
-                if (s.length() > 0 && s.length() < 6) {
-                    // You can show error in TextInputLayout
+                String password = s.toString();
+                
+                // Get parent TextInputLayout
+                View parent = (View) etPassword.getParent();
+                if (parent != null) {
+                    parent = (View) parent.getParent();
+                    if (parent instanceof TextInputLayout) {
+                        TextInputLayout passwordLayout = (TextInputLayout) parent;
+                        
+                        if (password.isEmpty()) {
+                            passwordLayout.setError(null);
+                            passwordLayout.setHelperText("Ít nhất 8 ký tự, có chữ HOA, chữ thường và số");
+                        } else if (password.length() < AppConstants.MIN_PASSWORD_LENGTH) {
+                            passwordLayout.setError("Cần thêm " + (AppConstants.MIN_PASSWORD_LENGTH - password.length()) + " ký tự");
+                        } else if (!password.matches(".*[a-z].*")) {
+                            passwordLayout.setError("Cần có chữ thường (a-z)");
+                        } else if (!password.matches(".*[A-Z].*")) {
+                            passwordLayout.setError("Cần có chữ HOA (A-Z)");
+                        } else if (!password.matches(".*\\d.*")) {
+                            passwordLayout.setError("Cần có số (0-9)");
+                        } else if (!password.matches(AppConstants.PASSWORD_PATTERN)) {
+                            passwordLayout.setError("Mật khẩu chưa đủ mạnh");
+                        } else {
+                            passwordLayout.setError(null);
+                            passwordLayout.setHelperText("✓ Mật khẩu mạnh");
+                        }
+                    }
                 }
             }
 
@@ -119,9 +144,9 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        // Validate password length
-        if (password.length() < 6) {
-            Toast.makeText(this, "⚠️ Mật khẩu phải có ít nhất 6 ký tự", Toast.LENGTH_SHORT).show();
+        // Validate password strength
+        if (!password.matches(AppConstants.PASSWORD_PATTERN)) {
+            Toast.makeText(this, "⚠️ Mật khẩu phải có ít nhất " + AppConstants.MIN_PASSWORD_LENGTH + " ký tự, bao gồm chữ HOA, chữ thường và số", Toast.LENGTH_LONG).show();
             etPassword.requestFocus();
             return;
         }

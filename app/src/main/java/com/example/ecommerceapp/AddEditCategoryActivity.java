@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import com.bumptech.glide.Glide;
+import com.example.ecommerceapp.utils.LogUtil;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.signature.ObjectKey;
 import com.example.ecommerceapp.database.DatabaseHelper;
@@ -170,8 +171,8 @@ public class AddEditCategoryActivity extends AppCompatActivity {
             
             Toast.makeText(this, "✅ Đã chọn ảnh thành công", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(this, "❌ Lỗi khi chọn ảnh", Toast.LENGTH_SHORT).show();
+            LogUtil.e("AddEditCategory", "Error handling gallery image", e);
+            Toast.makeText(this, "❌ Lỗi khi chọn ảnh: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 

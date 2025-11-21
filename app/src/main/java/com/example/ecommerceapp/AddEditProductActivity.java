@@ -19,6 +19,8 @@ import android.widget.Spinner;
 import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+
+import com.example.ecommerceapp.utils.LogUtil;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
@@ -192,8 +194,8 @@ public class AddEditProductActivity extends AppCompatActivity {
             
             Toast.makeText(this, "✅ Đã chọn ảnh thành công", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(this, "❌ Lỗi khi chọn ảnh", Toast.LENGTH_SHORT).show();
+            LogUtil.e("AddEditProduct", "Error handling gallery image", e);
+            Toast.makeText(this, "❌ Lỗi khi chọn ảnh: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
     
@@ -203,8 +205,8 @@ public class AddEditProductActivity extends AppCompatActivity {
             ivProductPreview.setImageBitmap(bitmap);
             Toast.makeText(this, "✅ Đã chụp ảnh thành công", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(this, "❌ Lỗi khi lưu ảnh", Toast.LENGTH_SHORT).show();
+            LogUtil.e("AddEditProduct", "Error handling camera image", e);
+            Toast.makeText(this, "❌ Lỗi khi lưu ảnh: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
     
@@ -227,7 +229,7 @@ public class AddEditProductActivity extends AppCompatActivity {
             
             return file.getAbsolutePath();
         } catch (Exception e) {
-            e.printStackTrace();
+            LogUtil.e("AddEditProduct", "Error saving image to internal storage", e);
             return null;
         }
     }

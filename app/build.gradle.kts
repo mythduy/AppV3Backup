@@ -29,6 +29,19 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    
+    packaging {
+        resources {
+            excludes += setOf(
+                "META-INF/NOTICE.md",
+                "META-INF/LICENSE.md",
+                "META-INF/notice.txt",
+                "META-INF/license.txt",
+                "META-INF/ASL2.0",
+                "META-INF/LGPL2.1"
+            )
+        }
+    }
 }
 
 dependencies {
@@ -60,6 +73,10 @@ dependencies {
     // Activity Result APIs
     implementation("androidx.activity:activity:1.8.0")
     implementation("androidx.fragment:fragment:1.6.2")
+    
+    // JavaMail API for sending emails
+    implementation("com.sun.mail:android-mail:1.6.7")
+    implementation("com.sun.mail:android-activation:1.6.7")
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

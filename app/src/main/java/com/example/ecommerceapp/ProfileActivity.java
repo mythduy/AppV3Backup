@@ -14,6 +14,7 @@ import androidx.cardview.widget.CardView;
 import com.bumptech.glide.Glide;
 import com.example.ecommerceapp.database.DatabaseHelper;
 import com.example.ecommerceapp.models.User;
+import com.example.ecommerceapp.utils.LogUtil;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class ProfileActivity extends AppCompatActivity {
@@ -69,7 +70,7 @@ public class ProfileActivity extends AppCompatActivity {
             loadUserInfo();
             setupClickListeners();
         } catch (Exception e) {
-            e.printStackTrace();
+            LogUtil.e("Profile", "Error initializing ProfileActivity", e);
             Toast.makeText(this, "Lỗi: " + e.getMessage(), Toast.LENGTH_LONG).show();
             finish();
         }
@@ -191,11 +192,11 @@ public class ProfileActivity extends AppCompatActivity {
         
         for (com.example.ecommerceapp.models.Order order : allOrders) {
             String status = order.getStatus();
-            if ("Chờ xác nhận".equals(status)) {
+            if (com.example.ecommerceapp.models.Order.STATUS_PENDING.equals(status)) {
                 pendingCount++;
-            } else if ("Đang giao hàng".equals(status)) {
+            } else if (com.example.ecommerceapp.models.Order.STATUS_SHIPPING.equals(status)) {
                 shippingCount++;
-            } else if ("Hoàn thành".equals(status)) {
+            } else if (com.example.ecommerceapp.models.Order.STATUS_COMPLETED.equals(status)) {
                 completedCount++;
             }
         }
@@ -226,15 +227,15 @@ public class ProfileActivity extends AppCompatActivity {
 
         // Order stats clicks
         if (btnPendingOrders != null) {
-            btnPendingOrders.setOnClickListener(v -> openOrderHistory("Chờ xác nhận"));
+            btnPendingOrders.setOnClickListener(v -> openOrderHistory(com.example.ecommerceapp.models.Order.STATUS_PENDING));
         }
         
         if (btnShippingOrders != null) {
-            btnShippingOrders.setOnClickListener(v -> openOrderHistory("Đang giao hàng"));
+            btnShippingOrders.setOnClickListener(v -> openOrderHistory(com.example.ecommerceapp.models.Order.STATUS_SHIPPING));
         }
         
         if (btnCompletedOrders != null) {
-            btnCompletedOrders.setOnClickListener(v -> openOrderHistory("Hoàn thành"));
+            btnCompletedOrders.setOnClickListener(v -> openOrderHistory(com.example.ecommerceapp.models.Order.STATUS_COMPLETED));
         }
         
         if (btnAllOrders != null) {
