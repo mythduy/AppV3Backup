@@ -54,15 +54,35 @@ public class AddressSelectionAdapter extends RecyclerView.Adapter<AddressSelecti
             holder.tvDefault.setVisibility(View.GONE);
         }
         
-        holder.radioButton.setChecked(position == selectedPosition);
+        boolean isSelected = position == selectedPosition;
+        holder.radioButton.setChecked(isSelected);
+        
+        // Update card appearance based on selection
+        com.google.android.material.card.MaterialCardView cardView = 
+            (com.google.android.material.card.MaterialCardView) holder.itemView;
+        if (isSelected) {
+            cardView.setStrokeColor(holder.itemView.getContext().getResources().getColor(R.color.colorPrimary));
+            cardView.setStrokeWidth(4);
+        } else {
+            cardView.setStrokeColor(android.graphics.Color.TRANSPARENT);
+            cardView.setStrokeWidth(2);
+        }
         
         holder.itemView.setOnClickListener(v -> {
-            int oldPosition = selectedPosition;
-            selectedPosition = holder.getAdapterPosition();
-            notifyItemChanged(oldPosition);
-            notifyItemChanged(selectedPosition);
-            if (listener != null) {
-                listener.onAddressSelected(address);
+            int clickedPosition = holder.getAdapterPosition();
+            if (clickedPosition != RecyclerView.NO_POSITION) {
+                int oldPosition = selectedPosition;
+                selectedPosition = clickedPosition;
+                
+                // Update both old and new positions
+                if (oldPosition != -1) {
+                    notifyItemChanged(oldPosition);
+                }
+                notifyItemChanged(selectedPosition);
+                
+                if (listener != null) {
+                    listener.onAddressSelected(address);
+                }
             }
         });
     }

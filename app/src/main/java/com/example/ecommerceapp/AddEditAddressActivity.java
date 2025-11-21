@@ -42,6 +42,11 @@ public class AddEditAddressActivity extends AppCompatActivity {
     private List<Province> provinceList = new ArrayList<>();
     private List<District> districtList = new ArrayList<>();
     private List<Ward> wardList = new ArrayList<>();
+    
+    // Store address data from intent
+    private String editFullName, editPhone, editAddressDetail;
+    private String editProvince, editDistrict, editWard;
+    private boolean editIsDefault;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,17 +57,34 @@ public class AddEditAddressActivity extends AppCompatActivity {
         addressId = getIntent().getIntExtra("address_id", -1);
         isEditMode = (addressId != -1);
         
+        // Load address data from intent if in edit mode
+        if (isEditMode) {
+            editFullName = getIntent().getStringExtra("full_name");
+            editPhone = getIntent().getStringExtra("phone");
+            editAddressDetail = getIntent().getStringExtra("address_detail");
+            editProvince = getIntent().getStringExtra("province");
+            editDistrict = getIntent().getStringExtra("district");
+            editWard = getIntent().getStringExtra("ward");
+            editIsDefault = getIntent().getBooleanExtra("is_default", false);
+        }
+        
         dbHelper = new DatabaseHelper(this);
         apiService = ApiClient.getProvinceApiService();
 
         initViews();
         setupToolbar();
         setupSpinners();
-        loadProvinces();
         
+        // Fill basic data immediately if in edit mode
         if (isEditMode) {
-            fillEditData();
+            etFullName.setText(editFullName);
+            etPhone.setText(editPhone);
+            etAddressDetail.setText(editAddressDetail);
+            cbSetDefault.setChecked(editIsDefault);
         }
+        
+        // Load provinces (will trigger fillEditData after loading)
+        loadProvinces();
     }
 
     private void initViews() {
@@ -157,6 +179,11 @@ public class AddEditAddressActivity extends AppCompatActivity {
                     provinceList.add(defaultProvince);
                     provinceList.addAll(response.body());
                     provinceAdapter.notifyDataSetChanged();
+                    
+                    // Fill location data if in edit mode
+                    if (isEditMode && editProvince != null) {
+                        selectProvince(editProvince);
+                    }
                 }
             }
 
@@ -179,6 +206,11 @@ public class AddEditAddressActivity extends AppCompatActivity {
                     districtList.add(defaultDistrict);
                     districtList.addAll(response.body().districts);
                     districtAdapter.notifyDataSetChanged();
+                    
+                    // Auto-select district if in edit mode
+                    if (isEditMode && editDistrict != null) {
+                        selectDistrict(editDistrict);
+                    }
                 }
             }
 
@@ -201,6 +233,11 @@ public class AddEditAddressActivity extends AppCompatActivity {
                     wardList.add(defaultWard);
                     wardList.addAll(response.body().wards);
                     wardAdapter.notifyDataSetChanged();
+                    
+                    // Auto-select ward if in edit mode
+                    if (isEditMode && editWard != null) {
+                        selectWard(editWard);
+                    }
                 }
             }
 
@@ -212,42 +249,37 @@ public class AddEditAddressActivity extends AppCompatActivity {
         });
     }
 
-    private void fillEditData() {
-        etFullName.setText(getIntent().getStringExtra("full_name"));
-        etPhone.setText(getIntent().getStringExtra("phone"));
-        etAddressDetail.setText(getIntent().getStringExtra("address_detail"));
-        cbSetDefault.setChecked(getIntent().getBooleanExtra("is_default", false));
-        
-        final String province = getIntent().getStringExtra("province");
-        final String district = getIntent().getStringExtra("district");
-        final String ward = getIntent().getStringExtra("ward");
-        
-        spinnerProvince.post(() -> {
+    private void selectProvince(String provinceName) {
+        spinnerProvince.postDelayed(() -> {
             for (int i = 0; i < provinceList.size(); i++) {
-                if (provinceList.get(i).getName().equals(province)) {
+                if (provinceList.get(i).getName().equals(provinceName)) {
                     spinnerProvince.setSelection(i);
-                    
-                    spinnerDistrict.postDelayed(() -> {
-                        for (int j = 0; j < districtList.size(); j++) {
-                            if (districtList.get(j).getName().equals(district)) {
-                                spinnerDistrict.setSelection(j);
-                                
-                                spinnerWard.postDelayed(() -> {
-                                    for (int k = 0; k < wardList.size(); k++) {
-                                        if (wardList.get(k).getName().equals(ward)) {
-                                            spinnerWard.setSelection(k);
-                                            break;
-                                        }
-                                    }
-                                }, 500);
-                                break;
-                            }
-                        }
-                    }, 500);
                     break;
                 }
             }
-        });
+        }, 300);
+    }
+    
+    private void selectDistrict(String districtName) {
+        spinnerDistrict.postDelayed(() -> {
+            for (int i = 0; i < districtList.size(); i++) {
+                if (districtList.get(i).getName().equals(districtName)) {
+                    spinnerDistrict.setSelection(i);
+                    break;
+                }
+            }
+        }, 300);
+    }
+    
+    private void selectWard(String wardName) {
+        spinnerWard.postDelayed(() -> {
+            for (int i = 0; i < wardList.size(); i++) {
+                if (wardList.get(i).getName().equals(wardName)) {
+                    spinnerWard.setSelection(i);
+                    break;
+                }
+            }
+        }, 300);
     }
 
     private void saveAddress() {

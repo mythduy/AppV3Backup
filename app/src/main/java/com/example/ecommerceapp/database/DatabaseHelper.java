@@ -2,21 +2,24 @@ package com.example.ecommerceapp.database;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import com.example.ecommerceapp.database.dao.*;
 import com.example.ecommerceapp.models.*;
-import com.example.ecommerceapp.utils.AppConstants;
-import com.example.ecommerceapp.utils.LogUtil;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
+/**
+ * DatabaseHelper - Main database class with DAO pattern
+ * Refactored to use Data Access Objects (DAO) for better code organization
+ * 
+ * Usage:
+ *   DatabaseHelper db = new DatabaseHelper(context);
+ *   db.getUserDao().login(username, password);
+ *   db.getProductDao().getAll();
+ */
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "ecommerce.db";
-    private static final int DATABASE_VERSION = 9; // Updated for user profile fields
+    private static final int DATABASE_VERSION = 9;
 
     // Tables
     private static final String TABLE_USERS = "users";
@@ -29,16 +32,105 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TABLE_SHIPPING_ADDRESSES = "shipping_addresses";
     
     private Context context;
+    
+    // DAO instances (lazy initialization)
+    private UserDao userDao;
+    private ProductDao productDao;
+    private CartDao cartDao;
+    private OrderDao orderDao;
+    private WishlistDao wishlistDao;
+    private ReviewDao reviewDao;
+    private ShippingAddressDao shippingAddressDao;
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
         this.context = context;
     }
 
+    // ==================== DAO GETTERS ====================
+    
+    public UserDao getUserDao() {
+        if (userDao == null) {
+            userDao = new UserDao(getWritableDatabase());
+        }
+        return userDao;
+    }
+    
+    public ProductDao getProductDao() {
+        if (productDao == null) {
+            productDao = new ProductDao(getWritableDatabase());
+        }
+        return productDao;
+    }
+    
+    public CartDao getCartDao() {
+        if (cartDao == null) {
+            cartDao = new CartDao(getWritableDatabase());
+        }
+        return cartDao;
+    }
+    
+    public OrderDao getOrderDao() {
+        if (orderDao == null) {
+            orderDao = new OrderDao(getWritableDatabase());
+        }
+        return orderDao;
+    }
+    
+    public WishlistDao getWishlistDao() {
+        if (wishlistDao == null) {
+            wishlistDao = new WishlistDao(getWritableDatabase());
+        }
+        return wishlistDao;
+    }
+    
+    public ReviewDao getReviewDao() {
+        if (reviewDao == null) {
+            reviewDao = new ReviewDao(getWritableDatabase());
+        }
+        return reviewDao;
+    }
+    
+    public ShippingAddressDao getShippingAddressDao() {
+        if (shippingAddressDao == null) {
+            shippingAddressDao = new ShippingAddressDao(getWritableDatabase());
+        }
+        return shippingAddressDao;
+    }
+
+    // ==================== DATABASE SETUP ====================
+
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // Create Users table
-        String createUsersTable = "CREATE TABLE " + TABLE_USERS + " (" +
+        createTables(db);
+        insertSampleProducts(db);
+        insertDefaultUser(db);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        if (oldVersion < 9) {
+            db.execSQL("ALTER TABLE " + TABLE_USERS + " ADD COLUMN bio TEXT");
+            db.execSQL("ALTER TABLE " + TABLE_USERS + " ADD COLUMN gender TEXT");
+            db.execSQL("ALTER TABLE " + TABLE_USERS + " ADD COLUMN date_of_birth TEXT");
+        }
+        
+        if (oldVersion < 8) {
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_SHIPPING_ADDRESSES);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_REVIEWS);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_WISHLIST);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_ORDER_ITEMS);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_ORDERS);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_CART);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_PRODUCTS);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
+            onCreate(db);
+        }
+    }
+
+    private void createTables(SQLiteDatabase db) {
+        // Users table
+        db.execSQL("CREATE TABLE " + TABLE_USERS + " (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "username TEXT UNIQUE, " +
                 "email TEXT, " +
@@ -52,11 +144,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "longitude REAL DEFAULT 0, " +
                 "bio TEXT, " +
                 "gender TEXT, " +
-                "date_of_birth TEXT)";
-        db.execSQL(createUsersTable);
+                "date_of_birth TEXT)");
 
-        // Create Products table with new fields
-        String createProductsTable = "CREATE TABLE " + TABLE_PRODUCTS + " (" +
+        // Products table
+        db.execSQL("CREATE TABLE " + TABLE_PRODUCTS + " (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "name TEXT, " +
                 "description TEXT, " +
@@ -70,26 +161,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "discount REAL DEFAULT 0, " +
                 "is_new INTEGER DEFAULT 0, " +
                 "is_hot INTEGER DEFAULT 0, " +
-                "is_featured INTEGER DEFAULT 0)";
-        db.execSQL(createProductsTable);
+                "is_featured INTEGER DEFAULT 0)");
 
-        // Create Cart table
-        String createCartTable = "CREATE TABLE " + TABLE_CART + " (" +
+        // Cart table
+        db.execSQL("CREATE TABLE " + TABLE_CART + " (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "user_id INTEGER, " +
                 "product_id INTEGER, " +
                 "quantity INTEGER, " +
                 "FOREIGN KEY(user_id) REFERENCES users(id), " +
-                "FOREIGN KEY(product_id) REFERENCES products(id))";
-        db.execSQL(createCartTable);
+                "FOREIGN KEY(product_id) REFERENCES products(id))");
 
-        // Create Orders table with extended fields
-        String createOrdersTable = "CREATE TABLE " + TABLE_ORDERS + " (" +
+        // Orders table
+        db.execSQL("CREATE TABLE " + TABLE_ORDERS + " (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "user_id INTEGER, " +
                 "order_date TEXT, " +
                 "total_amount REAL, " +
-                "status TEXT DEFAULT 'pending', " + // pending/confirmed/shipping/completed/cancelled
+                "status TEXT DEFAULT 'pending', " +
                 "shipping_address TEXT, " +
                 "payment_method TEXT, " +
                 "shipper_name TEXT, " +
@@ -101,32 +190,29 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "shipped_at TEXT, " +
                 "completed_at TEXT, " +
                 "cancelled_at TEXT, " +
-                "FOREIGN KEY(user_id) REFERENCES users(id))";
-        db.execSQL(createOrdersTable);
+                "FOREIGN KEY(user_id) REFERENCES users(id))");
 
-        // Create Order Items table
-        String createOrderItemsTable = "CREATE TABLE " + TABLE_ORDER_ITEMS + " (" +
+        // Order Items table
+        db.execSQL("CREATE TABLE " + TABLE_ORDER_ITEMS + " (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "order_id INTEGER, " +
                 "product_id INTEGER, " +
                 "quantity INTEGER, " +
                 "price REAL, " +
                 "FOREIGN KEY(order_id) REFERENCES orders(id), " +
-                "FOREIGN KEY(product_id) REFERENCES products(id))";
-        db.execSQL(createOrderItemsTable);
+                "FOREIGN KEY(product_id) REFERENCES products(id))");
 
-        // Create Wishlist table
-        String createWishlistTable = "CREATE TABLE " + TABLE_WISHLIST + " (" +
+        // Wishlist table
+        db.execSQL("CREATE TABLE " + TABLE_WISHLIST + " (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "user_id INTEGER, " +
                 "product_id INTEGER, " +
                 "added_date TEXT, " +
                 "FOREIGN KEY(user_id) REFERENCES users(id), " +
-                "FOREIGN KEY(product_id) REFERENCES products(id))";
-        db.execSQL(createWishlistTable);
+                "FOREIGN KEY(product_id) REFERENCES products(id))");
 
-        // Create Reviews table
-        String createReviewsTable = "CREATE TABLE " + TABLE_REVIEWS + " (" +
+        // Reviews table
+        db.execSQL("CREATE TABLE " + TABLE_REVIEWS + " (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "product_id INTEGER, " +
                 "user_id INTEGER, " +
@@ -134,11 +220,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "comment TEXT, " +
                 "review_date TEXT, " +
                 "FOREIGN KEY(product_id) REFERENCES products(id), " +
-                "FOREIGN KEY(user_id) REFERENCES users(id))";
-        db.execSQL(createReviewsTable);
+                "FOREIGN KEY(user_id) REFERENCES users(id))");
 
-        // Create Shipping Addresses table
-        String createShippingAddressesTable = "CREATE TABLE " + TABLE_SHIPPING_ADDRESSES + " (" +
+        // Shipping Addresses table
+        db.execSQL("CREATE TABLE " + TABLE_SHIPPING_ADDRESSES + " (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "user_id INTEGER, " +
                 "full_name TEXT, " +
@@ -148,37 +233,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "ward TEXT, " +
                 "address_detail TEXT, " +
                 "is_default INTEGER DEFAULT 0, " +
-                "FOREIGN KEY(user_id) REFERENCES users(id))";
-        db.execSQL(createShippingAddressesTable);
-
-        // Insert sample products
-        insertSampleProducts(db);
-        
-        // Insert default user
-        insertDefaultUser(db);
-    }
-
-    @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        if (oldVersion < 9) {
-            // Add new columns to users table for profile fields
-            db.execSQL("ALTER TABLE " + TABLE_USERS + " ADD COLUMN bio TEXT");
-            db.execSQL("ALTER TABLE " + TABLE_USERS + " ADD COLUMN gender TEXT");
-            db.execSQL("ALTER TABLE " + TABLE_USERS + " ADD COLUMN date_of_birth TEXT");
-        }
-        
-        // For other upgrades, recreate all tables
-        if (oldVersion < 8) {
-            db.execSQL("DROP TABLE IF EXISTS " + TABLE_SHIPPING_ADDRESSES);
-            db.execSQL("DROP TABLE IF EXISTS " + TABLE_REVIEWS);
-            db.execSQL("DROP TABLE IF EXISTS " + TABLE_WISHLIST);
-            db.execSQL("DROP TABLE IF EXISTS " + TABLE_ORDER_ITEMS);
-            db.execSQL("DROP TABLE IF EXISTS " + TABLE_ORDERS);
-            db.execSQL("DROP TABLE IF EXISTS " + TABLE_CART);
-            db.execSQL("DROP TABLE IF EXISTS " + TABLE_PRODUCTS);
-            db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
-            onCreate(db);
-        }
+                "FOREIGN KEY(user_id) REFERENCES users(id))");
     }
 
     private void insertSampleProducts(SQLiteDatabase db) {
@@ -213,9 +268,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     private void insertDefaultUser(SQLiteDatabase db) {
-        // Tạo tài khoản mặc định
-        // Username: admin
-        // Password: admin123
         ContentValues values = new ContentValues();
         values.put("username", "admin");
         values.put("email", "admin@shop.com");
@@ -226,9 +278,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put("role", "admin");
         db.insert(TABLE_USERS, null, values);
         
-        // Tạo tài khoản user thường
-        // Username: user
-        // Password: user123
         values = new ContentValues();
         values.put("username", "user");
         values.put("email", "user@shop.com");
@@ -240,910 +289,107 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.insert(TABLE_USERS, null, values);
     }
 
-    // Update product images - chỉ gọi 1 lần khi cần update
+    // ==================== BACKWARD COMPATIBILITY METHODS ====================
+    // Legacy methods that delegate to DAOs - for existing code compatibility
+    
+    public long registerUser(User user) { return getUserDao().register(user); }
+    public User loginUser(String u, String p) { return getUserDao().login(u, p); }
+    public User getUserById(int id) { return getUserDao().getById(id); }
+    public User getUserByEmail(String email) { return getUserDao().getByEmail(email); }
+    public boolean updateUser(User user) { return getUserDao().update(user); }
+    public boolean updateUserPassword(int id, String p) { return getUserDao().updatePassword(id, p); }
+    public List<User> getAllUsers() { return getUserDao().getAll(); }
+    public boolean deleteUser(int id) { return getUserDao().delete(id); }
+    
+    public List<Product> getAllProducts() { return getProductDao().getAll(); }
+    public Product getProductById(int id) { return getProductDao().getById(id); }
+    public List<Product> searchProducts(String q) { return getProductDao().search(q); }
+    public List<String> getAllCategories() { return getProductDao().getAllCategories(); }
+    public List<Product> getProductsByCategory(String c) { return getProductDao().getByCategory(c); }
+    public List<Product> getLatestProducts(int limit) { return getProductDao().getLatest(limit); }
+    public List<Product> getFeaturedProducts(int limit) { return getProductDao().getFeatured(limit); }
+    public List<Product> getBestsellerProducts(int limit) { return getProductDao().getBestsellers(limit); }
+    public int getProductCountByCategory(String c) { return getProductDao().getCountByCategory(c); }
+    public List<Product> getFilteredProducts(String c, String pr, double r, boolean d, boolean h, boolean n, boolean s, String sort) {
+        return getProductDao().getFiltered(c, pr, r, d, h, n, s, sort);
+    }
+    public long addProduct(Product p) { return getProductDao().add(p); }
+    public boolean updateProduct(Product p) { return getProductDao().update(p); }
+    public boolean deleteProduct(int id) { return getProductDao().delete(id); }
+    public int getProductSoldCount(int id) { return getProductDao().getSoldCount(id); }
+    
+    public long addToCart(int u, int p, int q) { return getCartDao().addToCart(u, p, q); }
+    public List<CartItem> getCartItems(int u) { return getCartDao().getCartItems(u); }
+    public CartItem getCartItemById(int id) { return getCartDao().getById(id); }
+    public boolean updateCartItemQuantity(int id, int q) { return getCartDao().updateQuantity(id, q); }
+    public boolean removeFromCart(int id) { return getCartDao().remove(id); }
+    public void clearCart(int u) { getCartDao().clear(u); }
+    public int getCartItemCount(int u) { return getCartDao().getItemCount(u); }
+    
+    public long createOrder(Order o, List<CartItem> items) { return getOrderDao().create(o, items, getProductDao()); }
+    public Order getOrderById(int id) { return getOrderDao().getById(id); }
+    public List<Order> getOrderHistory(int u) { return getOrderDao().getOrderHistory(u); }
+    public List<Order> getAllOrders() { return getOrderDao().getAll(); }
+    public List<Order> getOrdersByStatus(String s) { return getOrderDao().getByStatus(s); }
+    public List<OrderItem> getOrderItems(int id) { return getOrderDao().getOrderItems(id); }
+    public boolean updateOrderStatus(int id, String s) { return getOrderDao().updateStatus(id, s); }
+    public boolean updateOrderShippingInfo(int id, String n, String p, String t) { return getOrderDao().updateShippingInfo(id, n, p, t); }
+    public boolean cancelOrder(int id, String r) { return getOrderDao().cancel(id, r); }
+    public boolean updateAdminNotes(int id, String n) { return getOrderDao().updateAdminNotes(id, n); }
+    public int getOrderCountByStatus(String s) { return getOrderDao().getCountByStatus(s); }
+    public double getTotalRevenue() { return getOrderDao().getTotalRevenue(); }
+    public double getTodayRevenue() { return getOrderDao().getTodayRevenue(); }
+    
+    public long addToWishlist(int u, int p) { return getWishlistDao().add(u, p); }
+    public boolean removeFromWishlist(int u, int p) { return getWishlistDao().remove(u, p); }
+    public boolean isInWishlist(int u, int p) { return getWishlistDao().isInWishlist(u, p); }
+    public List<Product> getWishlistProducts(int u) { return getWishlistDao().getWishlistProducts(u); }
+    public int getWishlistCount(int u) { return getWishlistDao().getCount(u); }
+    
+    public long addReview(int p, int u, float r, String c) { return getReviewDao().add(p, u, r, c); }
+    public List<Review> getProductReviews(int p) { return getReviewDao().getProductReviews(p); }
+    public boolean hasUserReviewedProduct(int u, int p) { return getReviewDao().hasUserReviewed(u, p); }
+    public boolean hasUserPurchasedProduct(int u, int p) { return getReviewDao().hasUserPurchased(u, p); }
+    public int getReviewCount(int p) { return getReviewDao().getReviewCount(p); }
+    public void fixProductRatings() { getReviewDao().fixAllProductRatings(); }
+    
+    public long addShippingAddress(int u, String n, String p, String pr, String d, String w, String a, boolean def) {
+        return getShippingAddressDao().add(u, n, p, pr, d, w, a, def);
+    }
+    public List<ShippingAddress> getShippingAddresses(int u) { return getShippingAddressDao().getAll(u); }
+    public ShippingAddress getDefaultShippingAddress(int u) { return getShippingAddressDao().getDefault(u); }
+    public boolean updateShippingAddress(int id, String n, String p, String pr, String d, String w, String a, boolean def) {
+        return getShippingAddressDao().update(id, n, p, pr, d, w, a, def);
+    }
+    public boolean setDefaultAddress(int u, int id) { return getShippingAddressDao().setDefault(u, id); }
+    public boolean deleteShippingAddress(int id) { return getShippingAddressDao().delete(id); }
+    
+    // Utility methods
     public void updateProductImages() {
-        SQLiteDatabase db = this.getWritableDatabase();
-        
-        // Cập nhật hình ảnh cho từng sản phẩm
-        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_1.jpg' WHERE id = 1");
-        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_2.jpg' WHERE id = 2");
-        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_3.jpg' WHERE id = 3");
-        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_4.jpg' WHERE id = 4");
-        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_5.jpg' WHERE id = 5");
-        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_6.jpg' WHERE id = 6");
-        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_7.jpg' WHERE id = 7");
-        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_8.jpg' WHERE id = 8");
-        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_9.jpg' WHERE id = 9");
-        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_10.jpg' WHERE id = 10");
-        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_11.jpg' WHERE id = 11");
-        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_12.jpg' WHERE id = 12");
-        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_13.jpg' WHERE id = 13");
-        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_14.jpg' WHERE id = 14");
-        db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_15.jpg' WHERE id = 15");
-        
+        SQLiteDatabase db = getWritableDatabase();
+        for (int i = 1; i <= 15; i++) {
+            db.execSQL("UPDATE products SET image_url = 'file:///android_asset/images/products/product_" + i + ".jpg' WHERE id = " + i);
+        }
         db.close();
     }
-
-    // User operations
-    public long registerUser(User user) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("username", user.getUsername());
-        values.put("email", user.getEmail());
-        values.put("password", user.getPassword());
-        values.put("full_name", user.getFullName());
-        values.put("phone", user.getPhone());
-        values.put("address", user.getAddress());
-        values.put("role", user.getRole() != null ? user.getRole() : "user");
-        return db.insert(TABLE_USERS, null, values);
-    }
-
-    public User loginUser(String usernameOrEmail, String password) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        
-        android.util.Log.d("DB_LOGIN", "Login attempt - usernameOrEmail: '" + usernameOrEmail + "', password: '" + password + "'");
-        
-        // Support login with both username and email
-        Cursor cursor = db.query(TABLE_USERS, null,
-                "(username=? OR email=?) AND password=?",
-                new String[]{usernameOrEmail, usernameOrEmail, password},
-                null, null, null);
-
-        android.util.Log.d("DB_LOGIN", "Query result count: " + (cursor != null ? cursor.getCount() : 0));
-
-        if (cursor != null && cursor.moveToFirst()) {
-            User user = new User();
-            user.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-            user.setUsername(cursor.getString(cursor.getColumnIndexOrThrow("username")));
-            user.setEmail(cursor.getString(cursor.getColumnIndexOrThrow("email")));
-            user.setFullName(cursor.getString(cursor.getColumnIndexOrThrow("full_name")));
-            user.setPhone(cursor.getString(cursor.getColumnIndexOrThrow("phone")));
-            user.setAddress(cursor.getString(cursor.getColumnIndexOrThrow("address")));
-            user.setRole(cursor.getString(cursor.getColumnIndexOrThrow("role")));
-            
-            android.util.Log.d("DB_LOGIN", "✅ Login successful - Found user: " + user.getUsername());
-            
-            cursor.close();
-            return user;
-        }
-        
-        android.util.Log.d("DB_LOGIN", "❌ Login failed - No matching user found");
-        
-        if (cursor != null) cursor.close();
-        return null;
-    }
-
-    public User getUserById(int userId) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_USERS, null, "id=?",
-                new String[]{String.valueOf(userId)}, null, null, null);
-
-        if (cursor != null && cursor.moveToFirst()) {
-            User user = new User();
-            user.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-            user.setUsername(cursor.getString(cursor.getColumnIndexOrThrow("username")));
-            user.setEmail(cursor.getString(cursor.getColumnIndexOrThrow("email")));
-            user.setFullName(cursor.getString(cursor.getColumnIndexOrThrow("full_name")));
-            user.setPhone(cursor.getString(cursor.getColumnIndexOrThrow("phone")));
-            user.setAddress(cursor.getString(cursor.getColumnIndexOrThrow("address")));
-            user.setRole(cursor.getString(cursor.getColumnIndexOrThrow("role")));
-            user.setAvatarUrl(cursor.getString(cursor.getColumnIndexOrThrow("avatar_url")));
-            user.setLatitude(cursor.getDouble(cursor.getColumnIndexOrThrow("latitude")));
-            user.setLongitude(cursor.getDouble(cursor.getColumnIndexOrThrow("longitude")));
-            user.setBio(cursor.getString(cursor.getColumnIndexOrThrow("bio")));
-            user.setGender(cursor.getString(cursor.getColumnIndexOrThrow("gender")));
-            user.setDateOfBirth(cursor.getString(cursor.getColumnIndexOrThrow("date_of_birth")));
-            cursor.close();
-            return user;
-        }
-        if (cursor != null) cursor.close();
-        return null;
-    }
-
-    public boolean updateUser(User user) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("full_name", user.getFullName());
-        values.put("email", user.getEmail());
-        values.put("phone", user.getPhone());
-        values.put("address", user.getAddress());
-        values.put("avatar_url", user.getAvatarUrl());
-        values.put("latitude", user.getLatitude());
-        values.put("longitude", user.getLongitude());
-        values.put("bio", user.getBio());
-        values.put("gender", user.getGender());
-        values.put("date_of_birth", user.getDateOfBirth());
-        int rows = db.update(TABLE_USERS, values, "id=?",
-                new String[]{String.valueOf(user.getId())});
-        return rows > 0;
-    }
-
-    public User getUserByEmail(String email) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_USERS, null, "email=?",
-                new String[]{email}, null, null, null);
-
-        if (cursor != null && cursor.moveToFirst()) {
-            User user = new User();
-            user.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-            user.setUsername(cursor.getString(cursor.getColumnIndexOrThrow("username")));
-            user.setEmail(cursor.getString(cursor.getColumnIndexOrThrow("email")));
-            user.setFullName(cursor.getString(cursor.getColumnIndexOrThrow("full_name")));
-            user.setPhone(cursor.getString(cursor.getColumnIndexOrThrow("phone")));
-            user.setAddress(cursor.getString(cursor.getColumnIndexOrThrow("address")));
-            user.setRole(cursor.getString(cursor.getColumnIndexOrThrow("role")));
-            cursor.close();
-            return user;
-        }
-        if (cursor != null) cursor.close();
-        return null;
-    }
-
-    public boolean updateUserPassword(int userId, String newPassword) {
-        LogUtil.d(AppConstants.TAG_DB_UPDATE, "Updating password for userId: " + userId);
-        
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("password", newPassword);
-        int rows = db.update(TABLE_USERS, values, "id=?",
-                new String[]{String.valueOf(userId)});
-        
-        LogUtil.d(AppConstants.TAG_DB_UPDATE, "Password update result: " + (rows > 0 ? "SUCCESS ✅ (" + rows + " rows)" : "FAILED ❌"));
-        
-        return rows > 0;
-    }
-
-    // Helper method to extract products from cursor (reduces code duplication)
-    private List<Product> extractProductsFromCursor(Cursor cursor) {
-        List<Product> products = new ArrayList<>();
-        if (cursor != null && cursor.moveToFirst()) {
-            do {
-                Product product = new Product();
-                product.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-                product.setName(cursor.getString(cursor.getColumnIndexOrThrow("name")));
-                product.setDescription(cursor.getString(cursor.getColumnIndexOrThrow("description")));
-                product.setPrice(cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
-                product.setCategory(cursor.getString(cursor.getColumnIndexOrThrow("category")));
-                product.setStock(cursor.getInt(cursor.getColumnIndexOrThrow("stock")));
-                product.setImageUrl(cursor.getString(cursor.getColumnIndexOrThrow("image_url")));
-                product.setRating(cursor.getDouble(cursor.getColumnIndexOrThrow("rating")));
-                product.setSku(cursor.getString(cursor.getColumnIndexOrThrow("sku")));
-                product.setWarranty(cursor.getString(cursor.getColumnIndexOrThrow("warranty")));
-                product.setDiscount(cursor.getDouble(cursor.getColumnIndexOrThrow("discount")));
-                product.setNew(cursor.getInt(cursor.getColumnIndexOrThrow("is_new")) == 1);
-                product.setHot(cursor.getInt(cursor.getColumnIndexOrThrow("is_hot")) == 1);
-                product.setFeatured(cursor.getInt(cursor.getColumnIndexOrThrow("is_featured")) == 1);
-                products.add(product);
-            } while (cursor.moveToNext());
-        }
-        if (cursor != null) {
-            cursor.close();
-        }
-        return products;
-    }
-
-    // Product operations
-    public List<Product> getAllProducts() {
-        List<Product> products = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_PRODUCTS, null, null, null, null, null, null);
-        return extractProductsFromCursor(cursor);
-    }
-
-    public Product getProductById(int productId) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_PRODUCTS, null, "id=?",
-                new String[]{String.valueOf(productId)}, null, null, null);
-
-        List<Product> products = extractProductsFromCursor(cursor);
-        return products.isEmpty() ? null : products.get(0);
-    }
-
-    public List<Product> searchProducts(String query) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_PRODUCTS, null,
-                "name LIKE ? OR description LIKE ? OR category LIKE ?",
-                new String[]{"%" + query + "%", "%" + query + "%", "%" + query + "%"},
-                null, null, null);
-        return extractProductsFromCursor(cursor);
-    }
-
-    public List<String> getAllCategories() {
-        List<String> categories = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT DISTINCT category FROM " + TABLE_PRODUCTS, null);
-
-        if (cursor.moveToFirst()) {
-            do {
-                categories.add(cursor.getString(0));
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        return categories;
-    }
-
-    public List<Product> getProductsByCategory(String category) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_PRODUCTS, null, "category=?",
-                new String[]{category}, null, null, null);
-        return extractProductsFromCursor(cursor);
-    }
-
-    // Cart operations
-    public long addToCart(int userId, int productId, int quantity) {
-        SQLiteDatabase db = this.getWritableDatabase();
-
-        // Check if product already in cart
-        Cursor cursor = db.query(TABLE_CART, null,
-                "user_id=? AND product_id=?",
-                new String[]{String.valueOf(userId), String.valueOf(productId)},
-                null, null, null);
-
-        if (cursor != null && cursor.moveToFirst()) {
-            int currentQty = cursor.getInt(cursor.getColumnIndexOrThrow("quantity"));
-            int newQty = currentQty + quantity;
-
-            ContentValues values = new ContentValues();
-            values.put("quantity", newQty);
-            int id = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
-            cursor.close();
-
-            db.update(TABLE_CART, values, "id=?", new String[]{String.valueOf(id)});
-            return id;
-        }
-        if (cursor != null) cursor.close();
-
-        ContentValues values = new ContentValues();
-        values.put("user_id", userId);
-        values.put("product_id", productId);
-        values.put("quantity", quantity);
-        return db.insert(TABLE_CART, null, values);
-    }
-
-    public List<CartItem> getCartItems(int userId) {
-        List<CartItem> cartItems = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        String query = "SELECT c.id, c.user_id, c.product_id, c.quantity, " +
-                "p.name, p.price, p.image_url, p.discount " +
-                "FROM " + TABLE_CART + " c " +
-                "INNER JOIN " + TABLE_PRODUCTS + " p ON c.product_id = p.id " +
-                "WHERE c.user_id = ?";
-
-        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(userId)});
-
-        if (cursor.moveToFirst()) {
-            do {
-                CartItem item = new CartItem();
-                item.setId(cursor.getInt(0));
-                item.setUserId(cursor.getInt(1));
-                item.setProductId(cursor.getInt(2));
-                item.setQuantity(cursor.getInt(3));
-                item.setProductName(cursor.getString(4));
-                
-                // Calculate final price with discount
-                double price = cursor.getDouble(5);
-                double discount = cursor.getDouble(7);
-                double finalPrice = price * (1 - discount / 100);
-                item.setProductPrice(finalPrice);
-                
-                item.setImageUrl(cursor.getString(6));
-                cartItems.add(item);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        return cartItems;
-    }
-
-    public boolean updateCartItemQuantity(int cartItemId, int quantity) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("quantity", quantity);
-        int rows = db.update(TABLE_CART, values, "id=?",
-                new String[]{String.valueOf(cartItemId)});
-        return rows > 0;
-    }
-
-    public boolean removeFromCart(int cartItemId) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        int rows = db.delete(TABLE_CART, "id=?", new String[]{String.valueOf(cartItemId)});
-        return rows > 0;
-    }
-
-    public void clearCart(int userId) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.delete(TABLE_CART, "user_id=?", new String[]{String.valueOf(userId)});
-    }
     
-    public CartItem getCartItemById(int cartItemId) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        
-        String query = "SELECT c.id, c.user_id, c.product_id, c.quantity, " +
-                "p.name, p.price, p.image_url, p.discount " +
-                "FROM " + TABLE_CART + " c " +
-                "INNER JOIN " + TABLE_PRODUCTS + " p ON c.product_id = p.id " +
-                "WHERE c.id = ?";
-        
-        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(cartItemId)});
-
-        CartItem item = null;
-        if (cursor.moveToFirst()) {
-            item = new CartItem();
-            item.setId(cursor.getInt(0));
-            item.setUserId(cursor.getInt(1));
-            item.setProductId(cursor.getInt(2));
-            item.setQuantity(cursor.getInt(3));
-            item.setProductName(cursor.getString(4));
-            
-            // Calculate final price with discount
-            double price = cursor.getDouble(5);
-            double discount = cursor.getDouble(7);
-            double finalPrice = price * (1 - discount / 100);
-            item.setProductPrice(finalPrice);
-            
-            item.setImageUrl(cursor.getString(6));
-        }
-        cursor.close();
-        return item;
-    }
-
-    // Order operations
-    public long createOrder(Order order, List<CartItem> cartItems) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.beginTransaction();
-
-        try {
-            ContentValues orderValues = new ContentValues();
-            orderValues.put("user_id", order.getUserId());
-            orderValues.put("order_date", order.getOrderDate());
-            orderValues.put("total_amount", order.getTotalAmount());
-            orderValues.put("status", order.getStatus());
-            orderValues.put("shipping_address", order.getShippingAddress());
-            orderValues.put("payment_method", order.getPaymentMethod());
-
-            long orderId = db.insert(TABLE_ORDERS, null, orderValues);
-
-            if (orderId != -1) {
-                for (CartItem item : cartItems) {
-                    // Check stock before creating order item
-                    Product product = getProductById(item.getProductId());
-                    if (product.getStock() < item.getQuantity()) {
-                        // Insufficient stock - rollback transaction
-                        return -1;
-                    }
-                    
-                    ContentValues itemValues = new ContentValues();
-                    itemValues.put("order_id", orderId);
-                    itemValues.put("product_id", item.getProductId());
-                    itemValues.put("quantity", item.getQuantity());
-                    itemValues.put("price", item.getProductPrice());
-                    db.insert(TABLE_ORDER_ITEMS, null, itemValues);
-
-                    // Update product stock - ensure it doesn't go below 0
-                    int newStock = Math.max(0, product.getStock() - item.getQuantity());
-                    ContentValues stockValues = new ContentValues();
-                    stockValues.put("stock", newStock);
-                    db.update(TABLE_PRODUCTS, stockValues, "id=?",
-                            new String[]{String.valueOf(item.getProductId())});
-                }
-
-                clearCart(order.getUserId());
-                db.setTransactionSuccessful();
-            }
-
-            return orderId;
-        } finally {
-            db.endTransaction();
-        }
-    }
-
-    public List<Order> getOrderHistory(int userId) {
-        List<Order> orders = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_ORDERS, null, "user_id=?",
-                new String[]{String.valueOf(userId)}, null, null, "id DESC");
-
-        if (cursor.moveToFirst()) {
-            do {
-                Order order = new Order();
-                order.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-                order.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow("user_id")));
-                order.setOrderDate(cursor.getString(cursor.getColumnIndexOrThrow("order_date")));
-                order.setTotalAmount(cursor.getDouble(cursor.getColumnIndexOrThrow("total_amount")));
-                order.setStatus(cursor.getString(cursor.getColumnIndexOrThrow("status")));
-                order.setShippingAddress(cursor.getString(cursor.getColumnIndexOrThrow("shipping_address")));
-                order.setPaymentMethod(cursor.getString(cursor.getColumnIndexOrThrow("payment_method")));
-                orders.add(order);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        return orders;
-    }
-
-    public List<Product> getLatestProducts(int limit) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        // Get latest products based on is_new flag or newest ID
-        Cursor cursor = db.query(TABLE_PRODUCTS, null, "stock > ?",
-                new String[]{"0"}, null, null, "id DESC", String.valueOf(limit));
-        return extractProductsFromCursor(cursor);
-    }
-
-    public List<Product> getFeaturedProducts(int limit) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        // Use is_featured flag from database
-        Cursor cursor = db.query(TABLE_PRODUCTS, null, "is_featured = ? AND stock > ?",
-                new String[]{"1", "0"}, null, null, "price DESC", String.valueOf(limit));
-
-        List<Product> products = extractProductsFromCursor(cursor);
-        
-        // If no featured products, fallback to high price products
-        if (products.isEmpty()) {
-            cursor = db.query(TABLE_PRODUCTS, null, "stock > ?",
-                    new String[]{"10"}, null, null, "price DESC", String.valueOf(limit));
-            products = extractProductsFromCursor(cursor);
-        }
-        
-        return products;
-    }
-
-    public List<Product> getBestsellerProducts(int limit) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        // For now use random, in future can track sales and use that
-        Cursor cursor = db.query(TABLE_PRODUCTS, null, "stock > ?",
-                new String[]{"0"}, null, null, "RANDOM()", String.valueOf(limit));
-        return extractProductsFromCursor(cursor);
-    }
-
-    public int getProductCountByCategory(String category) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_PRODUCTS + " WHERE category=?",
-                new String[]{category});
-        int count = 0;
-        if (cursor.moveToFirst()) {
-            count = cursor.getInt(0);
-        }
-        cursor.close();
-        return count;
-    }
-
-    // Advanced filter method
-    public List<Product> getFilteredProducts(String category, String priceRange, 
-                                             double minRating, boolean hasDiscount,
-                                             boolean isHot, boolean isNew, 
-                                             boolean inStockOnly, String sortBy) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        StringBuilder query = new StringBuilder("SELECT * FROM " + TABLE_PRODUCTS + " WHERE 1=1");
-        List<String> selectionArgs = new ArrayList<>();
-        
-        // Category filter
-        if (category != null && !category.equals("all")) {
-            query.append(" AND category = ?");
-            selectionArgs.add(category);
-        }
-        
-        // Price range filter
-        if (priceRange != null && !priceRange.equals("all")) {
-            switch (priceRange) {
-                case "under_50k":
-                    query.append(" AND price < 50000");
-                    break;
-                case "50k_100k":
-                    query.append(" AND price BETWEEN 50000 AND 100000");
-                    break;
-                case "100k_500k":
-                    query.append(" AND price BETWEEN 100000 AND 500000");
-                    break;
-                case "500k_1m":
-                    query.append(" AND price BETWEEN 500000 AND 1000000");
-                    break;
-                case "over_1m":
-                    query.append(" AND price > 1000000");
-                    break;
-            }
-        }
-        
-        // Rating filter
-        if (minRating > 0) {
-            query.append(" AND rating >= ?");
-            selectionArgs.add(String.valueOf(minRating));
-        }
-        
-        // Discount filter
-        if (hasDiscount) {
-            query.append(" AND discount > 0");
-        }
-        
-        // Hot filter
-        if (isHot) {
-            query.append(" AND is_hot = 1");
-        }
-        
-        // New filter
-        if (isNew) {
-            query.append(" AND is_new = 1");
-        }
-        
-        // Stock filter
-        if (inStockOnly) {
-            query.append(" AND stock > 0");
-        }
-        
-        // Sort
-        String orderBy = "";
-        if (sortBy != null) {
-            switch (sortBy) {
-                case "price_asc":
-                    orderBy = " ORDER BY price ASC";
-                    break;
-                case "price_desc":
-                    orderBy = " ORDER BY price DESC";
-                    break;
-                case "name_asc":
-                    orderBy = " ORDER BY name ASC";
-                    break;
-                case "rating_desc":
-                    orderBy = " ORDER BY rating DESC";
-                    break;
-                case "newest":
-                    orderBy = " ORDER BY id DESC";
-                    break;
-                default:
-                    orderBy = " ORDER BY id DESC";
-            }
-        } else {
-            orderBy = " ORDER BY id DESC";
-        }
-        query.append(orderBy);
-        
-        Cursor cursor = db.rawQuery(query.toString(), 
-                                    selectionArgs.toArray(new String[0]));
-        return extractProductsFromCursor(cursor);
-    }
-
-    public Order getOrderById(int orderId) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_ORDERS, null, "id=?",
-                new String[]{String.valueOf(orderId)}, null, null, null);
-
-        Order order = null;
-        if (cursor.moveToFirst()) {
-            order = extractOrderFromCursor(cursor);
-        }
-        cursor.close();
-        return order;
-    }
-
-    public List<com.example.ecommerceapp.models.OrderItem> getOrderItems(int orderId) {
-        List<com.example.ecommerceapp.models.OrderItem> orderItems = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
-        
-        String query = "SELECT oi.id, oi.order_id, oi.product_id, oi.quantity, oi.price, " +
-                       "p.name, p.image_url FROM " + TABLE_ORDER_ITEMS + " oi " +
-                       "INNER JOIN " + TABLE_PRODUCTS + " p ON oi.product_id = p.id " +
-                       "WHERE oi.order_id = ?";
-        
-        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(orderId)});
-
-        if (cursor.moveToFirst()) {
-            do {
-                com.example.ecommerceapp.models.OrderItem item = new com.example.ecommerceapp.models.OrderItem();
-                item.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-                item.setOrderId(cursor.getInt(cursor.getColumnIndexOrThrow("order_id")));
-                item.setProductId(cursor.getInt(cursor.getColumnIndexOrThrow("product_id")));
-                item.setProductName(cursor.getString(cursor.getColumnIndexOrThrow("name")));
-                item.setQuantity(cursor.getInt(cursor.getColumnIndexOrThrow("quantity")));
-                item.setPrice(cursor.getDouble(cursor.getColumnIndexOrThrow("price")));
-                item.setImageUrl(cursor.getString(cursor.getColumnIndexOrThrow("image_url")));
-                orderItems.add(item);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        return orderItems;
-    }
-
-    public List<Order> getAllOrders() {
-        List<Order> orders = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_ORDERS, null, null, null, null, null, "id DESC");
-
-        if (cursor.moveToFirst()) {
-            do {
-                Order order = new Order();
-                order.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-                order.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow("user_id")));
-                order.setOrderDate(cursor.getString(cursor.getColumnIndexOrThrow("order_date")));
-                order.setTotalAmount(cursor.getDouble(cursor.getColumnIndexOrThrow("total_amount")));
-                order.setStatus(cursor.getString(cursor.getColumnIndexOrThrow("status")));
-                order.setShippingAddress(cursor.getString(cursor.getColumnIndexOrThrow("shipping_address")));
-                order.setPaymentMethod(cursor.getString(cursor.getColumnIndexOrThrow("payment_method")));
-                orders.add(order);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        return orders;
-    }
-
-    public List<User> getAllUsers() {
-        List<User> users = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_USERS, null, null, null, null, null, "id ASC");
-
-        if (cursor.moveToFirst()) {
-            do {
-                User user = new User();
-                user.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-                user.setUsername(cursor.getString(cursor.getColumnIndexOrThrow("username")));
-                user.setEmail(cursor.getString(cursor.getColumnIndexOrThrow("email")));
-                user.setFullName(cursor.getString(cursor.getColumnIndexOrThrow("full_name")));
-                user.setPhone(cursor.getString(cursor.getColumnIndexOrThrow("phone")));
-                user.setAddress(cursor.getString(cursor.getColumnIndexOrThrow("address")));
-                user.setRole(cursor.getString(cursor.getColumnIndexOrThrow("role")));
-                user.setAvatarUrl(cursor.getString(cursor.getColumnIndexOrThrow("avatar_url")));
-                user.setLatitude(cursor.getDouble(cursor.getColumnIndexOrThrow("latitude")));
-                user.setLongitude(cursor.getDouble(cursor.getColumnIndexOrThrow("longitude")));
-                users.add(user);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        return users;
-    }
-
-    // Add Product
-    public long addProduct(Product product) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("name", product.getName());
-        values.put("description", product.getDescription());
-        values.put("price", product.getPrice());
-        values.put("category", product.getCategory());
-        values.put("stock", product.getStock());
-        values.put("image_url", product.getImageUrl());
-        
-        // New fields
-        values.put("rating", product.getRating());
-        values.put("sku", product.getSku());
-        values.put("warranty", product.getWarranty());
-        values.put("discount", product.getDiscount());
-        values.put("is_new", product.isNew() ? 1 : 0);
-        values.put("is_hot", product.isHot() ? 1 : 0);
-        values.put("is_featured", product.isFeatured() ? 1 : 0);
-        
-        long id = db.insert(TABLE_PRODUCTS, null, values);
-        
-        // Auto-generate SKU if not provided
-        if (id != -1 && (product.getSku() == null || product.getSku().isEmpty())) {
-            ContentValues skuValues = new ContentValues();
-            skuValues.put("sku", "PRD-" + String.format("%04d", id));
-            db.update(TABLE_PRODUCTS, skuValues, "id = ?", new String[]{String.valueOf(id)});
-        }
-        
-        return id;
-    }
-
-    // Update Product
-    public boolean updateProduct(Product product) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("name", product.getName());
-        values.put("description", product.getDescription());
-        values.put("price", product.getPrice());
-        values.put("category", product.getCategory());
-        values.put("stock", product.getStock());
-        values.put("image_url", product.getImageUrl());
-        
-        // New fields
-        values.put("rating", product.getRating());
-        values.put("sku", product.getSku());
-        values.put("warranty", product.getWarranty());
-        values.put("discount", product.getDiscount());
-        values.put("is_new", product.isNew() ? 1 : 0);
-        values.put("is_hot", product.isHot() ? 1 : 0);
-        values.put("is_featured", product.isFeatured() ? 1 : 0);
-        
-        int rows = db.update(TABLE_PRODUCTS, values, "id = ?", 
-                new String[]{String.valueOf(product.getId())});
-        return rows > 0;
-    }
-
-    // Delete Product
-    public boolean deleteProduct(int productId) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        
-        // Delete from cart first (foreign key constraint)
-        db.delete(TABLE_CART, "product_id = ?", new String[]{String.valueOf(productId)});
-        
-        // Delete from order_items
-        db.delete(TABLE_ORDER_ITEMS, "product_id = ?", new String[]{String.valueOf(productId)});
-        
-        // Delete product
-        int rows = db.delete(TABLE_PRODUCTS, "id = ?", new String[]{String.valueOf(productId)});
-        return rows > 0;
-    }
-
-    // Delete User
-    public boolean deleteUser(int userId) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        
-        // Delete user's cart items
-        db.delete(TABLE_CART, "user_id = ?", new String[]{String.valueOf(userId)});
-        
-        // Delete user's orders and order items
-        Cursor cursor = db.query(TABLE_ORDERS, new String[]{"id"}, "user_id = ?", 
-                new String[]{String.valueOf(userId)}, null, null, null);
-        if (cursor.moveToFirst()) {
-            do {
-                int orderId = cursor.getInt(0);
-                db.delete(TABLE_ORDER_ITEMS, "order_id = ?", new String[]{String.valueOf(orderId)});
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        
-        db.delete(TABLE_ORDERS, "user_id = ?", new String[]{String.valueOf(userId)});
-        
-        // Delete user
-        int rows = db.delete(TABLE_USERS, "id = ?", new String[]{String.valueOf(userId)});
-        return rows > 0;
-    }
-
-    // Add Category
-    public boolean addCategory(String categoryName) {
-        List<String> categories = getAllCategories();
-        if (categories.contains(categoryName)) {
-            return false; // Category already exists
-        }
-        
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("name", categoryName);
-        values.put("description", "");
-        values.put("price", 0);
-        values.put("category", categoryName);
-        values.put("stock", 0);
-        values.put("image_url", "");
-        
-        // Insert a placeholder product to create the category
-        long id = db.insert(TABLE_PRODUCTS, null, values);
-        
-        // Delete the placeholder immediately
-        if (id != -1) {
-            db.delete(TABLE_PRODUCTS, "id = ?", new String[]{String.valueOf(id)});
-        }
-        
-        return true;
-    }
-
-    // Update Category
-    public boolean updateCategory(String oldCategory, String newCategory) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("category", newCategory);
-        
-        int rows = db.update(TABLE_PRODUCTS, values, "category = ?", new String[]{oldCategory});
-        return rows >= 0; // Return true even if no products updated
-    }
-
-    // Delete Category
-    public boolean deleteCategory(String category) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        
-        // Delete all products in this category
-        db.delete(TABLE_PRODUCTS, "category = ?", new String[]{category});
-        
-        return true;
-    }
-
-    // ==================== WISHLIST OPERATIONS ====================
-    
-    // Add to Wishlist
-    public long addToWishlist(int userId, int productId) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        
-        // Check if already in wishlist
-        Cursor cursor = db.query(TABLE_WISHLIST, null,
-                "user_id=? AND product_id=?",
-                new String[]{String.valueOf(userId), String.valueOf(productId)},
-                null, null, null);
-        
-        if (cursor != null && cursor.moveToFirst()) {
-            cursor.close();
-            return -1; // Already exists
-        }
-        if (cursor != null) cursor.close();
-        
-        ContentValues values = new ContentValues();
-        values.put("user_id", userId);
-        values.put("product_id", productId);
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-        values.put("added_date", sdf.format(new Date()));
-        
-        return db.insert(TABLE_WISHLIST, null, values);
-    }
-    
-    // Remove from Wishlist
-    public boolean removeFromWishlist(int userId, int productId) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        int rows = db.delete(TABLE_WISHLIST, "user_id=? AND product_id=?",
-                new String[]{String.valueOf(userId), String.valueOf(productId)});
-        return rows > 0;
-    }
-    
-    // Check if product is in wishlist
-    public boolean isInWishlist(int userId, int productId) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_WISHLIST, null,
-                "user_id=? AND product_id=?",
-                new String[]{String.valueOf(userId), String.valueOf(productId)},
-                null, null, null);
-        
-        boolean exists = cursor != null && cursor.moveToFirst();
-        if (cursor != null) cursor.close();
-        return exists;
-    }
-    
-    // Get all wishlist items for user
-    public List<Product> getWishlistProducts(int userId) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        
-        String query = "SELECT p.* FROM " + TABLE_PRODUCTS + " p " +
-                "INNER JOIN " + TABLE_WISHLIST + " w ON p.id = w.product_id " +
-                "WHERE w.user_id = ? " +
-                "ORDER BY w.added_date DESC";
-        
-        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(userId)});
-        return extractProductsFromCursor(cursor);
-    }
-    
-    // Get wishlist count
-    public int getWishlistCount(int userId) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_WISHLIST + " WHERE user_id = ?",
-                new String[]{String.valueOf(userId)});
-        int count = 0;
-        if (cursor.moveToFirst()) {
-            count = cursor.getInt(0);
-        }
-        cursor.close();
-        return count;
-    }
-    
-    // Get cart item count (số lượng sản phẩm, không phải tổng quantity)
-    public int getCartItemCount(int userId) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_CART + " WHERE user_id = ?",
-                new String[]{String.valueOf(userId)});
-        int count = 0;
-        if (cursor.moveToFirst()) {
-            count = cursor.getInt(0);
-        }
-        cursor.close();
-        return count;
-    }
-    
-    // Migrate images from assets to internal storage (run once)
     public void migrateProductImagesFromAssets() {
         try {
             String[] assetImages = context.getAssets().list("images/products");
             if (assetImages == null || assetImages.length == 0) return;
             
-            // Create directory
             java.io.File directory = new java.io.File(context.getFilesDir(), "product_images");
-            if (!directory.exists()) {
-                directory.mkdirs();
-            }
+            if (!directory.exists()) directory.mkdirs();
             
             List<Product> products = getAllProducts();
-            int copiedCount = 0;
-            
             for (Product product : products) {
-                // Check if product already has local image
                 String currentImage = product.getImageUrl();
                 if (currentImage != null && !currentImage.isEmpty() && 
                     !currentImage.startsWith("http") && 
                     new java.io.File(currentImage).exists()) {
-                    continue; // Already migrated
+                    continue;
                 }
                 
-                // Try to find matching asset image
                 String assetFileName = "product_" + product.getId() + ".jpg";
                 boolean found = false;
                 
@@ -1155,9 +401,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 }
                 
                 if (found) {
-                    // Copy from assets to internal storage
                     java.io.InputStream is = context.getAssets().open("images/products/" + assetFileName);
-                    
                     String newFileName = "product_" + product.getId() + "_" + System.currentTimeMillis() + ".jpg";
                     java.io.File outFile = new java.io.File(directory, newFileName);
                     java.io.FileOutputStream fos = new java.io.FileOutputStream(outFile);
@@ -1171,504 +415,46 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     fos.close();
                     is.close();
                     
-                    // Update product with new path
                     product.setImageUrl(outFile.getAbsolutePath());
                     updateProduct(product);
-                    copiedCount++;
                 }
             }
-            
-            android.util.Log.d("DatabaseHelper", "Migrated " + copiedCount + " product images");
         } catch (Exception e) {
             android.util.Log.e("DatabaseHelper", "Error migrating product images", e);
         }
     }
     
-    // ==================== ORDER MANAGEMENT METHODS ====================
-    
-    public List<Order> getOrdersByStatus(String status) {
-        List<Order> orders = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_ORDERS, null, "status=?", 
-                new String[]{status}, null, null, "id DESC");
-
-        if (cursor.moveToFirst()) {
-            do {
-                orders.add(extractOrderFromCursor(cursor));
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        return orders;
-    }
-    
-    public int getOrderCountByStatus(String status) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_ORDERS + " WHERE status=?", 
-                new String[]{status});
-        int count = 0;
-        if (cursor.moveToFirst()) {
-            count = cursor.getInt(0);
-        }
-        cursor.close();
-        return count;
-    }
-    
-    public double getTotalRevenue() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT SUM(total_amount) FROM " + TABLE_ORDERS + 
-                " WHERE status=?", new String[]{Order.STATUS_COMPLETED});
-        double total = 0;
-        if (cursor.moveToFirst()) {
-            total = cursor.getDouble(0);
-        }
-        cursor.close();
-        return total;
-    }
-    
-    public double getTodayRevenue() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        String today = sdf.format(new Date());
+    // Category operations
+    public boolean addCategory(String categoryName) {
+        if (getAllCategories().contains(categoryName)) return false;
         
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT SUM(total_amount) FROM " + TABLE_ORDERS + 
-                " WHERE status=? AND DATE(order_date)=?", 
-                new String[]{Order.STATUS_COMPLETED, today});
-        double total = 0;
-        if (cursor.moveToFirst()) {
-            total = cursor.getDouble(0);
-        }
-        cursor.close();
-        return total;
-    }
-    
-    public boolean updateOrderStatus(int orderId, String newStatus) {
-        SQLiteDatabase db = this.getWritableDatabase();
+        SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put("status", newStatus);
+        values.put("name", categoryName);
+        values.put("description", "");
+        values.put("price", 0);
+        values.put("category", categoryName);
+        values.put("stock", 0);
+        values.put("image_url", "");
         
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-        String currentTime = sdf.format(new Date());
-        
-        // Add timestamp based on status
-        switch (newStatus) {
-            case Order.STATUS_CONFIRMED:
-                values.put("confirmed_at", currentTime);
-                break;
-            case Order.STATUS_SHIPPING:
-                values.put("shipped_at", currentTime);
-                break;
-            case Order.STATUS_COMPLETED:
-                values.put("completed_at", currentTime);
-                break;
-            case Order.STATUS_CANCELLED:
-                values.put("cancelled_at", currentTime);
-                break;
+        long id = db.insert(TABLE_PRODUCTS, null, values);
+        if (id != -1) {
+            db.delete(TABLE_PRODUCTS, "id = ?", new String[]{String.valueOf(id)});
         }
-        
-        int rows = db.update(TABLE_ORDERS, values, "id=?", new String[]{String.valueOf(orderId)});
-        return rows > 0;
+        return true;
     }
     
-    public boolean updateOrderShippingInfo(int orderId, String shipperName, String shipperPhone, String trackingCode) {
-        SQLiteDatabase db = this.getWritableDatabase();
+    public boolean updateCategory(String oldCategory, String newCategory) {
+        SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put("shipper_name", shipperName);
-        values.put("shipper_phone", shipperPhone);
-        values.put("tracking_code", trackingCode);
-        
-        int rows = db.update(TABLE_ORDERS, values, "id=?", new String[]{String.valueOf(orderId)});
-        return rows > 0;
+        values.put("category", newCategory);
+        db.update(TABLE_PRODUCTS, values, "category = ?", new String[]{oldCategory});
+        return true;
     }
     
-    public boolean cancelOrder(int orderId, String reason) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("status", Order.STATUS_CANCELLED);
-        values.put("cancelled_reason", reason);
-        
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-        values.put("cancelled_at", sdf.format(new Date()));
-        
-        int rows = db.update(TABLE_ORDERS, values, "id=?", new String[]{String.valueOf(orderId)});
-        return rows > 0;
-    }
-    
-    public boolean updateAdminNotes(int orderId, String notes) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("admin_notes", notes);
-        
-        int rows = db.update(TABLE_ORDERS, values, "id=?", new String[]{String.valueOf(orderId)});
-        return rows > 0;
-    }
-    
-    private Order extractOrderFromCursor(Cursor cursor) {
-        Order order = new Order();
-        order.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-        order.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow("user_id")));
-        order.setOrderDate(cursor.getString(cursor.getColumnIndexOrThrow("order_date")));
-        order.setTotalAmount(cursor.getDouble(cursor.getColumnIndexOrThrow("total_amount")));
-        order.setStatus(cursor.getString(cursor.getColumnIndexOrThrow("status")));
-        order.setShippingAddress(cursor.getString(cursor.getColumnIndexOrThrow("shipping_address")));
-        order.setPaymentMethod(cursor.getString(cursor.getColumnIndexOrThrow("payment_method")));
-        
-        // Extended fields
-        int shipperNameIndex = cursor.getColumnIndex("shipper_name");
-        if (shipperNameIndex >= 0) order.setShipperName(cursor.getString(shipperNameIndex));
-        
-        int shipperPhoneIndex = cursor.getColumnIndex("shipper_phone");
-        if (shipperPhoneIndex >= 0) order.setShipperPhone(cursor.getString(shipperPhoneIndex));
-        
-        int trackingCodeIndex = cursor.getColumnIndex("tracking_code");
-        if (trackingCodeIndex >= 0) order.setTrackingCode(cursor.getString(trackingCodeIndex));
-        
-        int cancelledReasonIndex = cursor.getColumnIndex("cancelled_reason");
-        if (cancelledReasonIndex >= 0) order.setCancelledReason(cursor.getString(cancelledReasonIndex));
-        
-        int adminNotesIndex = cursor.getColumnIndex("admin_notes");
-        if (adminNotesIndex >= 0) order.setAdminNotes(cursor.getString(adminNotesIndex));
-        
-        int confirmedAtIndex = cursor.getColumnIndex("confirmed_at");
-        if (confirmedAtIndex >= 0) order.setConfirmedAt(cursor.getString(confirmedAtIndex));
-        
-        int shippedAtIndex = cursor.getColumnIndex("shipped_at");
-        if (shippedAtIndex >= 0) order.setShippedAt(cursor.getString(shippedAtIndex));
-        
-        int completedAtIndex = cursor.getColumnIndex("completed_at");
-        if (completedAtIndex >= 0) order.setCompletedAt(cursor.getString(completedAtIndex));
-        
-        int cancelledAtIndex = cursor.getColumnIndex("cancelled_at");
-        if (cancelledAtIndex >= 0) order.setCancelledAt(cursor.getString(cancelledAtIndex));
-        
-        return order;
-    }
-
-    // ==================== REVIEWS OPERATIONS ====================
-    
-    public long addReview(int productId, int userId, float rating, String comment) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("product_id", productId);
-        values.put("user_id", userId);
-        values.put("rating", rating);
-        values.put("comment", comment);
-        
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
-        values.put("review_date", sdf.format(new Date()));
-        
-        long result = db.insert(TABLE_REVIEWS, null, values);
-        
-        // Update product rating
-        if (result != -1) {
-            updateProductAverageRating(productId);
-        }
-        
-        return result;
-    }
-    
-    public List<Review> getProductReviews(int productId) {
-        List<Review> reviews = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
-        
-        // Use COALESCE to handle NULL avatar_url
-        String query = "SELECT r.*, u.full_name, COALESCE(u.avatar_url, '') as avatar_url " +
-                      "FROM " + TABLE_REVIEWS + " r " +
-                      "INNER JOIN " + TABLE_USERS + " u ON r.user_id = u.id " +
-                      "WHERE r.product_id = ? " +
-                      "ORDER BY r.id DESC";
-        
-        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(productId)});
-        
-        if (cursor.moveToFirst()) {
-            do {
-                Review review = new Review();
-                review.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-                review.setProductId(cursor.getInt(cursor.getColumnIndexOrThrow("product_id")));
-                review.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow("user_id")));
-                review.setRating(cursor.getFloat(cursor.getColumnIndexOrThrow("rating")));
-                review.setComment(cursor.getString(cursor.getColumnIndexOrThrow("comment")));
-                review.setReviewDate(cursor.getString(cursor.getColumnIndexOrThrow("review_date")));
-                review.setUserName(cursor.getString(cursor.getColumnIndexOrThrow("full_name")));
-                
-                // Get avatar with proper null handling
-                int avatarIndex = cursor.getColumnIndex("avatar_url");
-                if (avatarIndex >= 0) {
-                    String avatarUrl = cursor.getString(avatarIndex);
-                    // Set to null if empty string to maintain consistency
-                    review.setUserAvatar(avatarUrl != null && !avatarUrl.isEmpty() ? avatarUrl : null);
-                }
-                
-                reviews.add(review);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        return reviews;
-    }
-    
-    public boolean hasUserReviewedProduct(int userId, int productId) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(TABLE_REVIEWS, null,
-                "user_id=? AND product_id=?",
-                new String[]{String.valueOf(userId), String.valueOf(productId)},
-                null, null, null);
-        
-        boolean hasReviewed = cursor != null && cursor.getCount() > 0;
-        if (cursor != null) cursor.close();
-        return hasReviewed;
-    }
-    
-    public boolean hasUserPurchasedProduct(int userId, int productId) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        
-        String query = "SELECT COUNT(*) FROM " + TABLE_ORDER_ITEMS + " oi " +
-                      "INNER JOIN " + TABLE_ORDERS + " o ON oi.order_id = o.id " +
-                      "WHERE o.user_id = ? AND oi.product_id = ? AND o.status = ?";
-        
-        Cursor cursor = db.rawQuery(query, new String[]{
-            String.valueOf(userId), 
-            String.valueOf(productId),
-            Order.STATUS_COMPLETED
-        });
-        
-        boolean hasPurchased = false;
-        if (cursor.moveToFirst()) {
-            hasPurchased = cursor.getInt(0) > 0;
-        }
-        cursor.close();
-        return hasPurchased;
-    }
-    
-    private void updateProductAverageRating(int productId) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        
-        String query = "SELECT AVG(rating) FROM " + TABLE_REVIEWS + " WHERE product_id = ?";
-        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(productId)});
-        
-        ContentValues values = new ContentValues();
-        if (cursor.moveToFirst() && !cursor.isNull(0)) {
-            double avgRating = cursor.getDouble(0);
-            values.put("rating", avgRating);
-        } else {
-            // No reviews - set rating to 0
-            values.put("rating", 0.0);
-        }
-        db.update(TABLE_PRODUCTS, values, "id=?", new String[]{String.valueOf(productId)});
-        cursor.close();
-    }
-    
-    // Fix ratings for all products - set to 0 if no reviews
-    public void fixProductRatings() {
-        SQLiteDatabase db = this.getWritableDatabase();
-        
-        // Update all products: set rating = 0 if they have no reviews
-        String query = "UPDATE " + TABLE_PRODUCTS + " " +
-                      "SET rating = 0.0 " +
-                      "WHERE id NOT IN (SELECT DISTINCT product_id FROM " + TABLE_REVIEWS + ")";
-        db.execSQL(query);
-        
-        // Recalculate rating for products that have reviews
-        Cursor cursor = db.rawQuery("SELECT DISTINCT product_id FROM " + TABLE_REVIEWS, null);
-        while (cursor.moveToNext()) {
-            int productId = cursor.getInt(0);
-            updateProductAverageRating(productId);
-        }
-        cursor.close();
-    }
-    
-    public int getReviewCount(int productId) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_REVIEWS + " WHERE product_id = ?",
-                new String[]{String.valueOf(productId)});
-        
-        int count = 0;
-        if (cursor.moveToFirst()) {
-            count = cursor.getInt(0);
-        }
-        cursor.close();
-        return count;
-    }
-
-    public int getProductSoldCount(int productId) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        
-        // Count total quantity sold from order_items where order status is completed
-        String query = "SELECT SUM(oi.quantity) " +
-                      "FROM " + TABLE_ORDER_ITEMS + " oi " +
-                      "INNER JOIN " + TABLE_ORDERS + " o ON oi.order_id = o.id " +
-                      "WHERE oi.product_id = ? AND o.status = 'completed'";
-        
-        Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(productId)});
-        
-        int soldCount = 0;
-        if (cursor.moveToFirst() && !cursor.isNull(0)) {
-            soldCount = cursor.getInt(0);
-        }
-        cursor.close();
-        return soldCount;
-    }
-
-    // ==================== SHIPPING ADDRESSES OPERATIONS ====================
-    
-    public long addShippingAddress(int userId, String fullName, String phone, 
-                                   String province, String district, String ward, 
-                                   String addressDetail, boolean isDefault) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        
-        // Check if user has any existing addresses
-        Cursor cursor = db.query(TABLE_SHIPPING_ADDRESSES, new String[]{"COUNT(*)"}, 
-                                "user_id=?", new String[]{String.valueOf(userId)}, 
-                                null, null, null);
-        boolean hasExistingAddresses = false;
-        if (cursor.moveToFirst()) {
-            hasExistingAddresses = cursor.getInt(0) > 0;
-        }
-        cursor.close();
-        
-        // If this is the first address, automatically set as default
-        if (!hasExistingAddresses) {
-            isDefault = true;
-        }
-        
-        // If this is default address, unset all other default addresses
-        if (isDefault) {
-            ContentValues updateValues = new ContentValues();
-            updateValues.put("is_default", 0);
-            db.update(TABLE_SHIPPING_ADDRESSES, updateValues, "user_id=?", 
-                     new String[]{String.valueOf(userId)});
-        }
-        
-        ContentValues values = new ContentValues();
-        values.put("user_id", userId);
-        values.put("full_name", fullName);
-        values.put("phone", phone);
-        values.put("province", province);
-        values.put("district", district);
-        values.put("ward", ward);
-        values.put("address_detail", addressDetail);
-        values.put("is_default", isDefault ? 1 : 0);
-        
-        return db.insert(TABLE_SHIPPING_ADDRESSES, null, values);
-    }
-    
-    public List<com.example.ecommerceapp.models.ShippingAddress> getShippingAddresses(int userId) {
-        List<com.example.ecommerceapp.models.ShippingAddress> addresses = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
-        
-        Cursor cursor = db.query(TABLE_SHIPPING_ADDRESSES, null, "user_id=?",
-                new String[]{String.valueOf(userId)}, null, null, "is_default DESC, id DESC");
-        
-        if (cursor.moveToFirst()) {
-            do {
-                com.example.ecommerceapp.models.ShippingAddress address = 
-                    new com.example.ecommerceapp.models.ShippingAddress();
-                address.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-                address.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow("user_id")));
-                address.setFullName(cursor.getString(cursor.getColumnIndexOrThrow("full_name")));
-                address.setPhone(cursor.getString(cursor.getColumnIndexOrThrow("phone")));
-                address.setProvince(cursor.getString(cursor.getColumnIndexOrThrow("province")));
-                address.setDistrict(cursor.getString(cursor.getColumnIndexOrThrow("district")));
-                address.setWard(cursor.getString(cursor.getColumnIndexOrThrow("ward")));
-                address.setAddressDetail(cursor.getString(cursor.getColumnIndexOrThrow("address_detail")));
-                address.setDefault(cursor.getInt(cursor.getColumnIndexOrThrow("is_default")) == 1);
-                addresses.add(address);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        return addresses;
-    }
-    
-    public com.example.ecommerceapp.models.ShippingAddress getDefaultShippingAddress(int userId) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        
-        // First try to get default address
-        Cursor cursor = db.query(TABLE_SHIPPING_ADDRESSES, null, 
-                "user_id=? AND is_default=1",
-                new String[]{String.valueOf(userId)}, null, null, null);
-        
-        com.example.ecommerceapp.models.ShippingAddress address = null;
-        if (cursor.moveToFirst()) {
-            address = new com.example.ecommerceapp.models.ShippingAddress();
-            address.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-            address.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow("user_id")));
-            address.setFullName(cursor.getString(cursor.getColumnIndexOrThrow("full_name")));
-            address.setPhone(cursor.getString(cursor.getColumnIndexOrThrow("phone")));
-            address.setProvince(cursor.getString(cursor.getColumnIndexOrThrow("province")));
-            address.setDistrict(cursor.getString(cursor.getColumnIndexOrThrow("district")));
-            address.setWard(cursor.getString(cursor.getColumnIndexOrThrow("ward")));
-            address.setAddressDetail(cursor.getString(cursor.getColumnIndexOrThrow("address_detail")));
-            address.setDefault(true);
-        }
-        cursor.close();
-        
-        // If no default address found, get the most recent address
-        if (address == null) {
-            cursor = db.query(TABLE_SHIPPING_ADDRESSES, null, 
-                    "user_id=?",
-                    new String[]{String.valueOf(userId)}, null, null, "id DESC", "1");
-            
-            if (cursor.moveToFirst()) {
-                address = new com.example.ecommerceapp.models.ShippingAddress();
-                address.setId(cursor.getInt(cursor.getColumnIndexOrThrow("id")));
-                address.setUserId(cursor.getInt(cursor.getColumnIndexOrThrow("user_id")));
-                address.setFullName(cursor.getString(cursor.getColumnIndexOrThrow("full_name")));
-                address.setPhone(cursor.getString(cursor.getColumnIndexOrThrow("phone")));
-                address.setProvince(cursor.getString(cursor.getColumnIndexOrThrow("province")));
-                address.setDistrict(cursor.getString(cursor.getColumnIndexOrThrow("district")));
-                address.setWard(cursor.getString(cursor.getColumnIndexOrThrow("ward")));
-                address.setAddressDetail(cursor.getString(cursor.getColumnIndexOrThrow("address_detail")));
-                address.setDefault(cursor.getInt(cursor.getColumnIndexOrThrow("is_default")) == 1);
-            }
-            cursor.close();
-        }
-        
-        return address;
-    }
-    
-    public boolean deleteShippingAddress(int addressId) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        int rows = db.delete(TABLE_SHIPPING_ADDRESSES, "id=?", 
-                            new String[]{String.valueOf(addressId)});
-        return rows > 0;
-    }
-    
-    public boolean updateShippingAddress(int addressId, String fullName, String phone,
-                                         String province, String district, String ward,
-                                         String addressDetail, boolean isDefault) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("full_name", fullName);
-        values.put("phone", phone);
-        values.put("province", province);
-        values.put("district", district);
-        values.put("ward", ward);
-        values.put("address_detail", addressDetail);
-        values.put("is_default", isDefault ? 1 : 0);
-        
-        int rows = db.update(TABLE_SHIPPING_ADDRESSES, values, "id=?",
-                            new String[]{String.valueOf(addressId)});
-        return rows > 0;
-    }
-    
-    public boolean setDefaultAddress(int userId, int addressId) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.beginTransaction();
-        
-        try {
-            // Unset all default addresses for this user
-            ContentValues updateValues = new ContentValues();
-            updateValues.put("is_default", 0);
-            db.update(TABLE_SHIPPING_ADDRESSES, updateValues, "user_id=?", 
-                     new String[]{String.valueOf(userId)});
-            
-            // Set the selected address as default
-            updateValues.put("is_default", 1);
-            int rows = db.update(TABLE_SHIPPING_ADDRESSES, updateValues, "id=?", 
-                                new String[]{String.valueOf(addressId)});
-            
-            db.setTransactionSuccessful();
-            return rows > 0;
-        } finally {
-            db.endTransaction();
-        }
+    public boolean deleteCategory(String category) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.delete(TABLE_PRODUCTS, "category = ?", new String[]{category});
+        return true;
     }
 }

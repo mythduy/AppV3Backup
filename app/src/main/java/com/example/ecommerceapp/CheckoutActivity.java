@@ -46,7 +46,7 @@ public class CheckoutActivity extends AppCompatActivity {
     private static final String TAG = "CheckoutActivity";
     
     private Toolbar toolbar;
-    private TextView tvDefaultAddress, tvSubtotal, tvShipping, tvTotal;
+    private TextView tvRecipientName, tvRecipientPhone, tvDefaultAddress, tvSubtotal, tvShipping, tvTotal;
     private RecyclerView rvSelectedProducts;
     private RadioGroup rgPayment;
     private MaterialButton btnChange, btnAddNewAddress, btnPlaceOrder;
@@ -109,6 +109,8 @@ public class CheckoutActivity extends AppCompatActivity {
 
     private void initViews() {
         toolbar = findViewById(R.id.toolbar);
+        tvRecipientName = findViewById(R.id.tvRecipientName);
+        tvRecipientPhone = findViewById(R.id.tvRecipientPhone);
         tvDefaultAddress = findViewById(R.id.tvDefaultAddress);
         tvSubtotal = findViewById(R.id.tvSubtotal);
         tvShipping = findViewById(R.id.tvShipping);
@@ -137,12 +139,27 @@ public class CheckoutActivity extends AppCompatActivity {
 
     private void loadDefaultShippingAddress() {
         selectedAddress = dbHelper.getDefaultShippingAddress(userId);
+        updateAddressDisplay();
+    }
+    
+    /**
+     * Helper method to update address display in UI
+     */
+    private void updateAddressDisplay() {
         if (selectedAddress != null) {
-            // Reset text color to default
+            // Show recipient name
+            tvRecipientName.setVisibility(View.VISIBLE);
+            tvRecipientName.setText(selectedAddress.getFullName());
+            
+            // Show phone number
+            tvRecipientPhone.setVisibility(View.VISIBLE);
+            tvRecipientPhone.setText(selectedAddress.getPhone());
+            
+            // Show full address with default badge if applicable
+            tvDefaultAddress.setVisibility(View.VISIBLE);
             tvDefaultAddress.setTextColor(getResources().getColor(R.color.colorTextSecondary));
             tvDefaultAddress.setText(selectedAddress.getFullAddress());
             
-            // Show appropriate badge
             if (selectedAddress.isDefault()) {
                 tvDefaultAddress.append(" (Mặc định)");
             }
@@ -151,6 +168,10 @@ public class CheckoutActivity extends AppCompatActivity {
             btnChange.setVisibility(View.VISIBLE);
             btnAddNewAddress.setVisibility(View.GONE);
         } else {
+            // No address - show warning
+            tvRecipientName.setVisibility(View.GONE);
+            tvRecipientPhone.setVisibility(View.GONE);
+            tvDefaultAddress.setVisibility(View.VISIBLE);
             tvDefaultAddress.setText("⚠️ Chưa có địa chỉ giao hàng. Vui lòng thêm địa chỉ để tiếp tục.");
             tvDefaultAddress.setTextColor(getResources().getColor(android.R.color.holo_orange_dark));
             
@@ -188,13 +209,15 @@ public class CheckoutActivity extends AppCompatActivity {
         AddressSelectionAdapter adapter = new AddressSelectionAdapter(addresses, address -> {
             // Enable confirm button when address is selected
             btnConfirm.setEnabled(true);
-            btnConfirm.setText("Chọn địa chỉ này");
         });
         rvAddresses.setAdapter(adapter);
         
-        // Disable confirm button initially if no address is pre-selected
-        btnConfirm.setEnabled(false);
-        btnConfirm.setText("Chọn");
+        // Enable confirm button if a default address is already selected
+        if (adapter.getSelectedAddress() != null) {
+            btnConfirm.setEnabled(true);
+        } else {
+            btnConfirm.setEnabled(false);
+        }
         
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setView(dialogView);
@@ -213,25 +236,19 @@ public class CheckoutActivity extends AppCompatActivity {
             dialog.dismiss();
         });
         
-        // Button "Ch\u1ecdn" - Apply selected address
+        // Button "Chọn" - Apply selected address
         btnConfirm.setOnClickListener(v -> {
             ShippingAddress selected = adapter.getSelectedAddress();
             if (selected != null) {
                 selectedAddress = selected;
                 
-                // Reset text color to default
-                tvDefaultAddress.setTextColor(getResources().getColor(R.color.colorTextSecondary));
-                tvDefaultAddress.setText(selected.getFullAddress());
+                // Update the address display with new selection
+                updateAddressDisplay();
                 
-                // Show appropriate badge
-                if (selected.isDefault()) {
-                    tvDefaultAddress.append(" (M\u1eb7c \u0111\u1ecbnh)");
-                }
-                
-                Toast.makeText(this, "\u2705 \u0110\u00e3 ch\u1ecdn \u0111\u1ecba ch\u1ec9 giao h\u00e0ng", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "✅ Đã chọn địa chỉ giao hàng", Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
             } else {
-                Toast.makeText(this, "\u26a0\ufe0f Vui l\u00f2ng ch\u1ecdn m\u1ed9t \u0111\u1ecba ch\u1ec9", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "⚠️ Vui lòng chọn một địa chỉ", Toast.LENGTH_SHORT).show();
             }
         });
         
