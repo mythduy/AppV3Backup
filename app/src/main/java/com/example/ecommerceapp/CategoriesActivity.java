@@ -1,6 +1,7 @@
 package com.example.ecommerceapp;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -8,6 +9,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.ecommerceapp.adapters.CategoryGridAdapter;
 import com.example.ecommerceapp.database.DatabaseHelper;
+import com.google.android.material.badge.BadgeDrawable;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +21,7 @@ public class CategoriesActivity extends AppCompatActivity {
     private BottomNavigationView bottomNav;
     private CategoryGridAdapter categoryAdapter;
     private DatabaseHelper dbHelper;
+    private int userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +29,10 @@ public class CategoriesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_categories);
 
         dbHelper = new DatabaseHelper(this);
+        
+        // Get user ID
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        userId = prefs.getInt("user_id", -1);
 
         initViews();
         setupToolbar();
@@ -89,6 +96,24 @@ public class CategoriesActivity extends AppCompatActivity {
 
             return false;
         });
+        
+        // Update cart badge on load
+        updateCartBadge();
+    }
+    
+    private void updateCartBadge() {
+        if (userId != -1) {
+            int cartCount = dbHelper.getCartItemCount(userId);
+            
+            BadgeDrawable badge = bottomNav.getOrCreateBadge(R.id.nav_cart);
+            if (cartCount > 0) {
+                badge.setVisible(true);
+                badge.setNumber(cartCount);
+                badge.setBackgroundColor(androidx.core.content.ContextCompat.getColor(this, R.color.colorRed));
+            } else {
+                badge.setVisible(false);
+            }
+        }
     }
 
     private void loadCategories() {
@@ -113,6 +138,8 @@ public class CategoriesActivity extends AppCompatActivity {
         super.onResume();
         // Reload categories to show updated images
         loadCategories();
+        // Update cart badge
+        updateCartBadge();
     }
 
 }

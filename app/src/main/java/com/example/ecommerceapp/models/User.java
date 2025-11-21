@@ -12,6 +12,9 @@ public class User {
     private String avatarUrl;
     private double latitude;
     private double longitude;
+    private String bio;
+    private String gender;
+    private String dateOfBirth;
 
     public User() {}
 
@@ -63,4 +66,13 @@ public class User {
 
     public double getLongitude() { return longitude; }
     public void setLongitude(double longitude) { this.longitude = longitude; }
+
+    public String getBio() { return bio; }
+    public void setBio(String bio) { this.bio = bio; }
+
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
+
+    public String getDateOfBirth() { return dateOfBirth; }
+    public void setDateOfBirth(String dateOfBirth) { this.dateOfBirth = dateOfBirth; }
 }

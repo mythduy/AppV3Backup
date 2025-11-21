@@ -15,6 +15,7 @@ import com.bumptech.glide.Glide;
 import com.example.ecommerceapp.database.DatabaseHelper;
 import com.example.ecommerceapp.models.User;
 import com.example.ecommerceapp.utils.LogUtil;
+import com.google.android.material.badge.BadgeDrawable;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class ProfileActivity extends AppCompatActivity {
@@ -23,7 +24,7 @@ public class ProfileActivity extends AppCompatActivity {
     private com.google.android.material.imageview.ShapeableImageView ivAvatar;
     private com.google.android.material.button.MaterialButton btnEditProfile, btnLogout;
     private com.google.android.material.card.MaterialCardView cardAdminMenu;
-    private LinearLayout btnAccountInfo, btnWishlist, btnOrderHistory;
+    private LinearLayout btnAccountInfo, btnWishlist, btnOrderHistory, btnShippingAddresses;
     private LinearLayout btnPendingOrders, btnShippingOrders, btnCompletedOrders, btnAllOrders;
     private LinearLayout btnManageProducts, btnManageCategories, btnManageOrders, btnManageUsers;
     private BottomNavigationView bottomNav;
@@ -99,6 +100,7 @@ public class ProfileActivity extends AppCompatActivity {
         btnAccountInfo = findViewById(R.id.btnAccountInfo);
         btnWishlist = findViewById(R.id.btnWishlist);
         btnOrderHistory = findViewById(R.id.btnOrderHistory);
+        btnShippingAddresses = findViewById(R.id.btnShippingAddresses);
         tvWishlistCount = findViewById(R.id.tvWishlistCount);
         
         btnManageProducts = findViewById(R.id.btnManageProducts);
@@ -138,6 +140,24 @@ public class ProfileActivity extends AppCompatActivity {
 
             return false;
         });
+        
+        // Update cart badge on load
+        updateCartBadge();
+    }
+    
+    private void updateCartBadge() {
+        if (userId != -1) {
+            int cartCount = dbHelper.getCartItemCount(userId);
+            
+            BadgeDrawable badge = bottomNav.getOrCreateBadge(R.id.nav_cart);
+            if (cartCount > 0) {
+                badge.setVisible(true);
+                badge.setNumber(cartCount);
+                badge.setBackgroundColor(androidx.core.content.ContextCompat.getColor(this, R.color.colorRed));
+            } else {
+                badge.setVisible(false);
+            }
+        }
     }
 
     private void loadUserInfo() {
@@ -266,6 +286,14 @@ public class ProfileActivity extends AppCompatActivity {
                 overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
             });
         }
+        
+        if (btnShippingAddresses != null) {
+            btnShippingAddresses.setOnClickListener(v -> {
+                Intent intent = new Intent(this, ShippingAddressesActivity.class);
+                startActivity(intent);
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            });
+        }
 
         // Admin menu clicks - only set if views exist
         if (btnManageProducts != null) {
@@ -333,5 +361,7 @@ public class ProfileActivity extends AppCompatActivity {
         // Reload user info when returning to this activity
         currentUser = dbHelper.getUserById(userId);
         loadUserInfo();
+        // Update cart badge
+        updateCartBadge();
     }
 }

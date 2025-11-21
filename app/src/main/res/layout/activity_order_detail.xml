@@ -276,6 +276,62 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
+            <!-- Cancelled Reason Card (Only show when order is cancelled) -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/layoutCancelledReason"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#FFEBEE">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Lý do hủy đơn"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/colorError"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvCancelledReason"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:textSize="14sp"
+                        android:textColor="@color/colorTextPrimary" />
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Cancel Order Button (Only show when order is pending) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCancelOrder"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Hủy đơn hàng"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                app:cornerRadius="12dp"
+                app:icon="@drawable/ic_close"
+                app:iconGravity="textStart"
+                app:strokeColor="@color/colorError"
+                app:strokeWidth="2dp"
+                app:backgroundTint="@color/colorWhite"
+                android:textColor="@color/colorError"
+                app:iconTint="@color/colorError"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
         </LinearLayout>
 
     </ScrollView>

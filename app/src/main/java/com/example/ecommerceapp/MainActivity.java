@@ -3,6 +3,8 @@ package com.example.ecommerceapp;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -41,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
     private TabLayout tabLayout;
     private RecyclerView rvCategories, rvProducts;
     private BottomNavigationView bottomNav;
+    private Handler bannerHandler;
+    private Runnable bannerRunnable;
     private ProductAdapter productAdapter;
     private CategoryAdapter categoryAdapter;
     private DatabaseHelper dbHelper;
@@ -218,16 +222,33 @@ public class MainActivity extends AppCompatActivity {
 
         BannerAdapter bannerAdapter = new BannerAdapter(bannerImages);
         vpBanner.setAdapter(bannerAdapter);
+        
+        // Optimize ViewPager2 performance
+        vpBanner.setOffscreenPageLimit(1); // Cache 1 page on each side
+        vpBanner.setPageTransformer(new ViewPager2.PageTransformer() {
+            @Override
+            public void transformPage(@androidx.annotation.NonNull android.view.View page, float position) {
+                // Simple fade animation - much lighter than scale/translate
+                if (position < -1 || position > 1) {
+                    page.setAlpha(0f);
+                } else {
+                    page.setAlpha(1f - Math.abs(position) * 0.3f);
+                }
+            }
+        });
 
-        // Auto scroll banner
-        vpBanner.postDelayed(new Runnable() {
+        // Auto scroll banner with Handler (more efficient)
+        bannerHandler = new Handler(Looper.getMainLooper());
+        bannerRunnable = new Runnable() {
             @Override
             public void run() {
-                int nextItem = (vpBanner.getCurrentItem() + 1) % bannerImages.size();
+                int currentItem = vpBanner.getCurrentItem();
+                int nextItem = (currentItem + 1) % bannerImages.size();
                 vpBanner.setCurrentItem(nextItem, true);
-                vpBanner.postDelayed(this, 3000);
+                bannerHandler.postDelayed(this, 5000); // 5 seconds delay for better viewing
             }
-        }, 3000);
+        };
+        bannerHandler.postDelayed(bannerRunnable, 5000);
     }
 
     private void setupTabs() {
@@ -288,6 +309,9 @@ public class MainActivity extends AppCompatActivity {
     private void setupBottomNavigation() {
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
+            
+            // Always update cart badge when any tab is clicked
+            updateCartBadge();
 
             if (id == R.id.nav_home) {
                 return true;
@@ -434,5 +458,28 @@ public class MainActivity extends AppCompatActivity {
         loadUserAvatar();
         
         updateCartBadge();
+        
+        // Resume banner auto-scroll
+        if (bannerHandler != null && bannerRunnable != null) {
+            bannerHandler.postDelayed(bannerRunnable, 5000);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Stop banner auto-scroll to save resources
+        if (bannerHandler != null && bannerRunnable != null) {
+            bannerHandler.removeCallbacks(bannerRunnable);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Clean up banner handler
+        if (bannerHandler != null && bannerRunnable != null) {
+            bannerHandler.removeCallbacks(bannerRunnable);
+        }
     }
 }

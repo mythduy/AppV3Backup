@@ -15,7 +15,11 @@ import android.provider.MediaStore;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RadioGroup;
+import android.widget.RadioButton;
 import android.widget.Toast;
+import android.app.DatePickerDialog;
+import java.util.Calendar;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
@@ -30,11 +34,12 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 
 public class EditProfileActivity extends AppCompatActivity {
-    private ImageView ivAvatar;
+    private com.google.android.material.imageview.ShapeableImageView ivAvatar;
     private FloatingActionButton fabChangePhoto;
-    private EditText etFullName, etEmail, etPhone, etAddress;
-    private Button btnSave;
-    private Toolbar toolbar;
+    private EditText etFullName, etBio, etEmail, etPhone, etDateOfBirth;
+    private RadioGroup rgGender;
+    private com.google.android.material.button.MaterialButton btnSave;
+    private com.google.android.material.appbar.MaterialToolbar toolbar;
     private DatabaseHelper dbHelper;
     private int userId;
     private String avatarUrl;
@@ -65,9 +70,11 @@ public class EditProfileActivity extends AppCompatActivity {
         ivAvatar = findViewById(R.id.ivAvatar);
         fabChangePhoto = findViewById(R.id.fabChangePhoto);
         etFullName = findViewById(R.id.etFullName);
+        etBio = findViewById(R.id.etBio);
+        rgGender = findViewById(R.id.rgGender);
+        etDateOfBirth = findViewById(R.id.etDateOfBirth);
         etEmail = findViewById(R.id.etEmail);
         etPhone = findViewById(R.id.etPhone);
-        etAddress = findViewById(R.id.etAddress);
         btnSave = findViewById(R.id.btnSave);
     }
 
@@ -157,7 +164,7 @@ public class EditProfileActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("Chỉnh sửa thông tin");
+            getSupportActionBar().setTitle("Edit Profile");
         }
         toolbar.setNavigationOnClickListener(v -> onBackPressed());
     }
@@ -165,6 +172,19 @@ public class EditProfileActivity extends AppCompatActivity {
     private void setupListeners() {
         fabChangePhoto.setOnClickListener(v -> checkPermissionAndPickImage());
         btnSave.setOnClickListener(v -> updateProfile());
+        etDateOfBirth.setOnClickListener(v -> showDatePicker());
+    }
+    
+    private void showDatePicker() {
+        android.app.DatePickerDialog datePickerDialog = new android.app.DatePickerDialog(
+            this,
+            (view, year, month, dayOfMonth) -> {
+                String date = String.format("%02d/%02d/%04d", dayOfMonth, month + 1, year);
+                etDateOfBirth.setText(date);
+            },
+            2000, 0, 1
+        );
+        datePickerDialog.show();
     }
 
     private void checkPermissionAndPickImage() {
@@ -191,9 +211,21 @@ public class EditProfileActivity extends AppCompatActivity {
         User user = dbHelper.getUserById(userId);
         if (user != null) {
             etFullName.setText(user.getFullName());
+            etBio.setText(user.getBio());
             etEmail.setText(user.getEmail());
             etPhone.setText(user.getPhone());
-            etAddress.setText(user.getAddress());
+            etDateOfBirth.setText(user.getDateOfBirth());
+            
+            // Set gender
+            String gender = user.getGender();
+            if ("Male".equals(gender)) {
+                rgGender.check(R.id.rbMale);
+            } else if ("Female".equals(gender)) {
+                rgGender.check(R.id.rbFemale);
+            } else {
+                rgGender.check(R.id.rbOther);
+            }
+            
             avatarUrl = user.getAvatarUrl();
 
             // Load avatar from file
@@ -202,7 +234,6 @@ public class EditProfileActivity extends AppCompatActivity {
                 if (avatarFile.exists()) {
                     Glide.with(this)
                             .load(avatarFile)
-                            .circleCrop()
                             .placeholder(R.drawable.ic_avatar_placeholder)
                             .into(ivAvatar);
                 } else {
@@ -214,21 +245,34 @@ public class EditProfileActivity extends AppCompatActivity {
 
     private void updateProfile() {
         String fullName = etFullName.getText().toString().trim();
+        String bio = etBio.getText().toString().trim();
         String email = etEmail.getText().toString().trim();
         String phone = etPhone.getText().toString().trim();
-        String address = etAddress.getText().toString().trim();
+        String dateOfBirth = etDateOfBirth.getText().toString().trim();
 
-        if (fullName.isEmpty() || email.isEmpty() || phone.isEmpty() || address.isEmpty()) {
-            Toast.makeText(this, "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+        if (fullName.isEmpty() || email.isEmpty()) {
+            Toast.makeText(this, "Please fill in required fields", Toast.LENGTH_SHORT).show();
             return;
+        }
+        
+        int selectedGenderId = rgGender.getCheckedRadioButtonId();
+        String gender;
+        if (selectedGenderId == R.id.rbMale) {
+            gender = "Male";
+        } else if (selectedGenderId == R.id.rbFemale) {
+            gender = "Female";
+        } else {
+            gender = "Other";
         }
 
         User user = new User();
         user.setId(userId);
         user.setFullName(fullName);
+        user.setBio(bio);
+        user.setGender(gender);
+        user.setDateOfBirth(dateOfBirth);
         user.setEmail(email);
         user.setPhone(phone);
-        user.setAddress(address);
         user.setAvatarUrl(avatarUrl);
 
         boolean result = dbHelper.updateUser(user);

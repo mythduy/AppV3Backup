@@ -4,16 +4,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/colorBackground">
+    android:background="#F5F5F5">
 
-    <!-- Toolbar -->
-    <androidx.appcompat.widget.Toolbar
+    <!-- Toolbar with Gradient -->
+    <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/colorPrimary"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+        android:background="@drawable/gradient_background"
+        android:elevation="4dp"
+        app:titleTextColor="@color/colorWhite"
+        app:navigationIconTint="@color/colorWhite" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -25,15 +26,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="12dp">
 
-            <!-- Thông tin nhận hàng Section -->
-            <androidx.cardview.widget.CardView
+            <!-- Shipping Address Section -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="2dp"
                 app:cardBackgroundColor="@color/colorWhite">
 
                 <LinearLayout
@@ -41,203 +42,86 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Thông tin nhận hàng"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/colorTextPrimary"
-                        android:layout_marginBottom="16dp" />
-
-                    <!-- Email -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Email"
-                        android:textSize="12sp"
-                        android:textColor="@color/colorTextSecondary"
-                        android:layout_marginBottom="4dp" />
-
-                    <EditText
-                        android:id="@+id/etEmail"
-                        android:layout_width="match_parent"
-                        android:layout_height="52dp"
-                        android:hint="Email"
-                        android:inputType="textEmailAddress"
-                        android:background="@drawable/bg_edittext_modern"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp"
-                        android:textSize="15sp"
-                        android:textColor="@color/colorTextPrimary"
-                        android:textColorHint="#9CA3AF"
-                        android:layout_marginBottom="12dp" />
-
-                    <!-- Họ và tên -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Họ và tên"
-                        android:textSize="12sp"
-                        android:textColor="@color/colorTextSecondary"
-                        android:layout_marginBottom="4dp" />
-
-                    <EditText
-                        android:id="@+id/etFullName"
-                        android:layout_width="match_parent"
-                        android:layout_height="52dp"
-                        android:hint="Họ và tên"
-                        android:inputType="textPersonName"
-                        android:background="@drawable/bg_edittext_modern"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp"
-                        android:textSize="15sp"
-                        android:textColor="@color/colorTextPrimary"
-                        android:textColorHint="#9CA3AF"
-                        android:layout_marginBottom="12dp" />
-
-                    <!-- Số điện thoại -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Số điện thoại"
-                        android:textSize="12sp"
-                        android:textColor="@color/colorTextSecondary"
-                        android:layout_marginBottom="4dp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
+                        android:layout_height="wrap_content"
                         android:orientation="horizontal"
+                        android:gravity="center_vertical"
                         android:layout_marginBottom="12dp">
 
-                        <Spinner
-                            android:id="@+id/spinnerCountryCode"
-                            android:layout_width="100dp"
-                            android:layout_height="match_parent"
-                            android:background="@drawable/bg_spinner"
-                            android:layout_marginEnd="8dp" />
-
-                        <EditText
-                            android:id="@+id/etPhone"
+                        <TextView
                             android:layout_width="0dp"
-                            android:layout_height="match_parent"
+                            android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:hint="Số điện thoại"
-                            android:inputType="phone"
-                            android:background="@drawable/bg_edittext_modern"
-                            android:paddingStart="16dp"
-                            android:paddingEnd="16dp"
-                            android:textSize="15sp"
-                            android:textColor="@color/colorTextPrimary"
-                            android:textColorHint="#9CA3AF" />
+                            android:text="Shipping Address"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/colorTextPrimary" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnChange"
+                            android:layout_width="wrap_content"
+                            android:layout_height="32dp"
+                            android:text="Change"
+                            android:textSize="12sp"
+                            android:textColor="@color/colorPrimary"
+                            android:textAllCaps="false"
+                            app:strokeColor="@color/colorPrimary"
+                            app:strokeWidth="1dp"
+                            app:backgroundTint="@color/colorWhite"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:insetTop="0dp"
+                            android:insetBottom="0dp"
+                            android:paddingStart="12dp"
+                            android:paddingEnd="12dp"
+                            app:cornerRadius="6dp" />
 
                     </LinearLayout>
 
-                    <!-- Địa chỉ -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Địa chỉ"
+                        android:text="Default Address"
                         android:textSize="12sp"
-                        android:textColor="@color/colorTextSecondary"
-                        android:layout_marginBottom="4dp" />
-
-                    <EditText
-                        android:id="@+id/etAddress"
-                        android:layout_width="match_parent"
-                        android:layout_height="52dp"
-                        android:hint="Địa chỉ"
-                        android:inputType="textPostalAddress"
-                        android:background="@drawable/bg_edittext_modern"
-                        android:paddingStart="16dp"
-                        android:paddingEnd="16dp"
-                        android:textSize="15sp"
+                        android:textStyle="bold"
                         android:textColor="@color/colorTextPrimary"
-                        android:textColorHint="#9CA3AF"
-                        android:layout_marginBottom="12dp" />
+                        android:layout_marginBottom="8dp" />
 
-                    <!-- Tỉnh thành -->
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Tỉnh thành"
-                        android:textSize="12sp"
-                        android:textColor="@color/colorTextSecondary"
-                        android:layout_marginBottom="4dp" />
-
-                    <Spinner
-                        android:id="@+id/spinnerProvince"
+                        android:id="@+id/tvDefaultAddress"
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:background="@drawable/bg_spinner"
-                        android:layout_marginBottom="12dp" />
-
-                    <!-- Quận huyện -->
-                    <TextView
-                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Quận huyện"
-                        android:textSize="12sp"
+                        android:text="18 Mươn Nên Kinh 60, Tháng Vân City, Sknh"
+                        android:textSize="13sp"
                         android:textColor="@color/colorTextSecondary"
-                        android:layout_marginBottom="4dp" />
+                        android:lineSpacingExtra="2dp" />
 
-                    <Spinner
-                        android:id="@+id/spinnerDistrict"
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnAddNewAddress"
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:background="@drawable/bg_spinner"
-                        android:layout_marginBottom="12dp" />
-
-                    <!-- Phường xã -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Phường xã"
-                        android:textSize="12sp"
-                        android:textColor="@color/colorTextSecondary"
-                        android:layout_marginBottom="4dp" />
-
-                    <Spinner
-                        android:id="@+id/spinnerWard"
-                        android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:background="@drawable/bg_spinner"
-                        android:layout_marginBottom="12dp" />
-
-                    <!-- Ghi chú -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Ghi chú (tùy chọn)"
-                        android:textSize="12sp"
-                        android:textColor="@color/colorTextSecondary"
-                        android:layout_marginBottom="4dp" />
-
-                    <EditText
-                        android:id="@+id/etNote"
-                        android:layout_width="match_parent"
-                        android:layout_height="90dp"
-                        android:hint="Ghi chú (tùy chọn)"
-                        android:inputType="textMultiLine"
-                        android:gravity="top|start"
-                        android:background="@drawable/bg_edittext_modern"
-                        android:padding="16dp"
-                        android:textSize="15sp"
-                        android:textColor="@color/colorTextPrimary"
-                        android:textColorHint="#9CA3AF" />
+                        android:layout_height="40dp"
+                        android:text="Add New Address"
+                        android:textSize="13sp"
+                        android:textColor="@color/colorPrimary"
+                        android:textAllCaps="false"
+                        app:strokeColor="@color/colorPrimary"
+                        app:strokeWidth="1dp"
+                        app:backgroundTint="@color/colorWhite"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_marginTop="12dp"
+                        app:cornerRadius="6dp" />
 
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Vận chuyển Section -->
-            <androidx.cardview.widget.CardView
+            <!-- Selected Products Section -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="2dp"
                 app:cardBackgroundColor="@color/colorWhite">
 
                 <LinearLayout
@@ -249,32 +133,28 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Vận chuyển"
-                        android:textSize="18sp"
+                        android:text="Selected Products"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="@color/colorTextPrimary"
                         android:layout_marginBottom="12dp" />
 
-                    <TextView
-                        android:id="@+id/tvShippingInfo"
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvSelectedProducts"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Vui lòng nhập thông tin giao hàng"
-                        android:textSize="14sp"
-                        android:textColor="@color/colorBlue"
-                        android:padding="12dp"
-                        android:background="@drawable/bg_info_light" />
+                        android:nestedScrollingEnabled="false" />
 
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Thanh toán Section -->
-            <androidx.cardview.widget.CardView
+            <!-- Payment Method Section -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="2dp"
                 app:cardBackgroundColor="@color/colorWhite">
 
                 <LinearLayout
@@ -286,8 +166,8 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Thanh toán"
-                        android:textSize="18sp"
+                        android:text="Payment Method"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="@color/colorTextPrimary"
                         android:layout_marginBottom="12dp" />
@@ -298,32 +178,149 @@
                         android:layout_height="wrap_content">
 
                         <RadioButton
-                            android:id="@+id/rbCOD"
+                            android:id="@+id/rbCreditCard"
                             android:layout_width="match_parent"
-                            android:layout_height="48dp"
-                            android:text="Thanh toán khi nhận hàng (COD)"
-                            android:checked="true"
+                            android:layout_height="wrap_content"
+                            android:text="Credit/Debit Card"
                             android:textSize="14sp"
-                            android:paddingStart="8dp" />
+                            android:textColor="@color/colorTextPrimary"
+                            android:paddingVertical="8dp"
+                            android:checked="true" />
 
                         <RadioButton
-                            android:id="@+id/rbBank"
+                            android:id="@+id/rbEWallet"
                             android:layout_width="match_parent"
-                            android:layout_height="48dp"
-                            android:text="Chuyển khoản ngân hàng"
+                            android:layout_height="wrap_content"
+                            android:text="E-Wallet (Momo/ZaloPay)"
                             android:textSize="14sp"
-                            android:paddingStart="8dp" />
+                            android:textColor="@color/colorTextPrimary"
+                            android:paddingVertical="8dp" />
+
+                        <RadioButton
+                            android:id="@+id/rbCOD"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Cash on Delivery (COD)"
+                            android:textSize="14sp"
+                            android:textColor="@color/colorTextPrimary"
+                            android:paddingVertical="8dp" />
 
                     </RadioGroup>
 
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Order Summary Section -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/colorWhite">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Order Summary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/colorTextPrimary"
+                        android:layout_marginBottom="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Subtotal"
+                            android:textSize="14sp"
+                            android:textColor="@color/colorTextSecondary" />
+
+                        <TextView
+                            android:id="@+id/tvSubtotal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="259.00k"
+                            android:textSize="14sp"
+                            android:textColor="@color/colorTextPrimary" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Shipping"
+                            android:textSize="14sp"
+                            android:textColor="@color/colorTextSecondary" />
+
+                        <TextView
+                            android:id="@+id/tvShipping"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="150k"
+                            android:textSize="14sp"
+                            android:textColor="@color/colorTextPrimary" />
+
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#E0E0E0"
+                        android:layout_marginBottom="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Total"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/colorTextPrimary" />
+
+                        <TextView
+                            android:id="@+id/tvTotal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="399.80k"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/colorPrimary" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
 
     </ScrollView>
 
-    <!-- Bottom Total and Button -->
+    <!-- Bottom Button -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -332,27 +329,18 @@
         android:elevation="8dp"
         android:padding="16dp">
 
-        <TextView
-            android:id="@+id/tvTotal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Tổng thanh toán: 0₫"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="@color/colorTextPrimary"
-            android:layout_marginBottom="12dp" />
-
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnPlaceOrder"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="Đặt hàng"
-            android:textSize="16sp"
+            android:layout_height="52dp"
+            android:text="Place Order"
+            android:textSize="15sp"
             android:textStyle="bold"
             android:textColor="@color/colorWhite"
-            android:letterSpacing="0.05"
-            android:background="@drawable/bg_button_modern"
-            android:elevation="6dp" />
+            android:textAllCaps="false"
+            android:background="@drawable/gradient_background"
+            app:cornerRadius="8dp"
+            android:elevation="4dp" />
 
     </LinearLayout>
 

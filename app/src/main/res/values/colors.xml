@@ -21,4 +21,9 @@
     <color name="shadow_light">#1A000000</color>
     <color name="gradient_start">#0033A0</color>
     <color name="gradient_end">#0066FF</color>
+    
+    <!-- Additional colors -->
+    <color name="colorError">#EF4444</color>
+    <color name="textPrimary">#1A1A1A</color>
+    <color name="textSecondary">#6B7280</color>
 </resources>

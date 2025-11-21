@@ -18,16 +18,25 @@ import com.example.ecommerceapp.models.Product;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.button.MaterialButton;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Locale;
 
 public class ProductDetailActivity extends AppCompatActivity {
     private ImageView ivProduct;
     private TextView tvName, tvPrice, tvDescription, tvCategory, tvStock;
     private TextView tvSKU, tvWarranty, tvQuantity, tvTotalPrice, tvRating;
+    private TextView tvReviewCount, tvAverageRating;
+    private android.widget.RatingBar ratingBarAverage;
     private MaterialButton btnAddToCart, btnBuyNow, btnFavorite, btnShare;
-    private MaterialButton btnIncrement, btnDecrement;
+    private MaterialButton btnIncrement, btnDecrement, btnWriteReview;
     private CollapsingToolbarLayout collapsingToolbar;
     private Toolbar toolbar;
+    private androidx.recyclerview.widget.RecyclerView rvReviews, rvRelatedProducts;
+    private android.widget.LinearLayout layoutEmptyReviews;
+    private TextView tvNoRelatedProducts;
+    private com.google.android.material.card.MaterialCardView cardRelatedProducts;
+    private com.example.ecommerceapp.adapters.ReviewAdapter reviewAdapter;
+    private com.example.ecommerceapp.adapters.ProductAdapter relatedProductsAdapter;
     private DatabaseHelper dbHelper;
     private Product product;
     private int userId;
@@ -81,6 +90,22 @@ public class ProductDetailActivity extends AppCompatActivity {
         btnShare = findViewById(R.id.btnShare);
         btnIncrement = findViewById(R.id.btnIncrement);
         btnDecrement = findViewById(R.id.btnDecrement);
+        
+        // Reviews views
+        tvReviewCount = findViewById(R.id.tvReviewCount);
+        tvAverageRating = findViewById(R.id.tvAverageRating);
+        ratingBarAverage = findViewById(R.id.ratingBarAverage);
+        rvRelatedProducts = findViewById(R.id.rvRelatedProducts);
+        tvNoRelatedProducts = findViewById(R.id.tvNoRelatedProducts);
+        cardRelatedProducts = findViewById(R.id.cardRelatedProducts);
+        btnWriteReview = findViewById(R.id.btnWriteReview);
+        rvReviews = findViewById(R.id.rvReviews);
+        layoutEmptyReviews = findViewById(R.id.layoutEmptyReviews);
+        
+        // Setup reviews RecyclerView
+        rvReviews.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
+        reviewAdapter = new com.example.ecommerceapp.adapters.ReviewAdapter(this);
+        rvReviews.setAdapter(reviewAdapter);
     }
 
     private void setupToolbar() {
@@ -107,6 +132,8 @@ public class ProductDetailActivity extends AppCompatActivity {
         btnIncrement.setOnClickListener(v -> incrementQuantity());
         
         btnDecrement.setOnClickListener(v -> decrementQuantity());
+        
+        btnWriteReview.setOnClickListener(v -> showWriteReviewDialog());
     }
 
     private void applyAnimations() {
@@ -171,6 +198,12 @@ public class ProductDetailActivity extends AppCompatActivity {
 
             // Check if product is in wishlist
             checkFavoriteStatus();
+            
+            // Load reviews
+            loadReviews();
+            
+            // Load related products
+            loadRelatedProducts();
         }
     }
 
@@ -306,17 +339,33 @@ public class ProductDetailActivity extends AppCompatActivity {
         }
         
         if (product.getStock() > 0) {
-            // Add to cart first
-            long result = dbHelper.addToCart(userId, product.getId(), quantity);
+            // Show loading
+            btnBuyNow.setEnabled(false);
+            btnBuyNow.setText("Đang xử lý...");
             
-            if (result != -1) {
-                // Navigate to cart
-                Intent intent = new Intent(this, CartActivity.class);
+            // Add to cart first and get cart item ID
+            long cartId = dbHelper.addToCart(userId, product.getId(), quantity);
+            
+            if (cartId != -1) {
+                // Navigate directly to checkout with this cart item
+                ArrayList<Integer> selectedCartIds = new ArrayList<>();
+                selectedCartIds.add((int) cartId);
+                
+                Intent intent = new Intent(this, CheckoutActivity.class);
+                intent.putIntegerArrayListExtra("selected_cart_ids", selectedCartIds);
                 startActivity(intent);
                 overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
+                
+                // Reset quantity for next purchase
+                quantity = 1;
+                updateQuantityAndTotal();
             } else {
-                Toast.makeText(this, "❌ Lỗi khi thêm vào giỏ hàng", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "❌ Lỗi khi xử lý đơn hàng", Toast.LENGTH_SHORT).show();
             }
+            
+            // Restore button
+            btnBuyNow.setEnabled(true);
+            btnBuyNow.setText("Mua ngay");
         } else {
             Toast.makeText(this, "❌ Sản phẩm đã hết hàng", Toast.LENGTH_SHORT).show();
         }
@@ -325,6 +374,159 @@ public class ProductDetailActivity extends AppCompatActivity {
     private String formatPrice(double price) {
         NumberFormat formatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
         return formatter.format(price);
+    }
+
+    private void loadReviews() {
+        if (product == null) return;
+        
+        java.util.List<com.example.ecommerceapp.models.Review> reviews = 
+            dbHelper.getProductReviews(product.getId());
+        
+        if (reviews.isEmpty()) {
+            rvReviews.setVisibility(View.GONE);
+            layoutEmptyReviews.setVisibility(View.VISIBLE);
+        } else {
+            rvReviews.setVisibility(View.VISIBLE);
+            layoutEmptyReviews.setVisibility(View.GONE);
+            reviewAdapter.updateReviews(reviews);
+        }
+        
+        // Update review count
+        int reviewCount = dbHelper.getReviewCount(product.getId());
+        tvReviewCount.setText("(" + reviewCount + " đánh giá)");
+        
+        // Update average rating
+        double avgRating = product.getRating();
+        tvAverageRating.setText(String.format("%.1f", avgRating));
+        ratingBarAverage.setRating((float) avgRating);
+    }
+
+    private void loadRelatedProducts() {
+        if (product == null || product.getCategory() == null || product.getCategory().isEmpty()) {
+            cardRelatedProducts.setVisibility(View.GONE);
+            return;
+        }
+        
+        // Get all products and filter by same category
+        java.util.List<Product> allProducts = dbHelper.getAllProducts();
+        java.util.List<Product> relatedProducts = new java.util.ArrayList<>();
+        
+        for (Product p : allProducts) {
+            if (p.getId() != product.getId() && 
+                p.getCategory() != null && 
+                p.getCategory().equals(product.getCategory())) {
+                relatedProducts.add(p);
+            }
+        }
+        
+        if (relatedProducts.isEmpty()) {
+            cardRelatedProducts.setVisibility(View.GONE);
+            return;
+        }
+        
+        // Limit to 6 products
+        if (relatedProducts.size() > 6) {
+            relatedProducts = relatedProducts.subList(0, 6);
+        }
+        
+        cardRelatedProducts.setVisibility(View.VISIBLE);
+        tvNoRelatedProducts.setVisibility(View.GONE);
+        
+        // Setup horizontal RecyclerView
+        androidx.recyclerview.widget.LinearLayoutManager layoutManager = 
+            new androidx.recyclerview.widget.LinearLayoutManager(this, 
+                androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL, false);
+        rvRelatedProducts.setLayoutManager(layoutManager);
+        
+        relatedProductsAdapter = new com.example.ecommerceapp.adapters.ProductAdapter(
+            this, relatedProducts, product1 -> {
+                // Click listener for related product
+                Intent intent = new Intent(ProductDetailActivity.this, ProductDetailActivity.class);
+                intent.putExtra("product_id", product1.getId());
+                startActivity(intent);
+                finish(); // Finish current activity to reload with new product
+            });
+        rvRelatedProducts.setAdapter(relatedProductsAdapter);
+    }
+
+    private void showWriteReviewDialog() {
+        if (userId == -1) {
+            Toast.makeText(this, "Vui lòng đăng nhập để đánh giá sản phẩm", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, LoginActivity.class));
+            return;
+        }
+        
+        // Check if user already reviewed this product
+        if (dbHelper.hasUserReviewedProduct(userId, product.getId())) {
+            Toast.makeText(this, "Bạn đã đánh giá sản phẩm này rồi", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Check if user has purchased this product
+        if (!dbHelper.hasUserPurchasedProduct(userId, product.getId())) {
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Thông báo")
+                .setMessage("Bạn cần mua và nhận sản phẩm này trước khi có thể đánh giá")
+                .setPositiveButton("OK", null)
+                .show();
+            return;
+        }
+        
+        // Show review dialog
+        android.app.Dialog dialog = new android.app.Dialog(this);
+        dialog.setContentView(R.layout.dialog_write_review);
+        dialog.getWindow().setLayout(
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+            android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        dialog.getWindow().setBackgroundDrawable(
+            new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT)
+        );
+        
+        android.widget.RatingBar ratingBar = dialog.findViewById(R.id.ratingBar);
+        TextView tvRatingText = dialog.findViewById(R.id.tvRatingText);
+        android.widget.EditText etComment = dialog.findViewById(R.id.etComment);
+        MaterialButton btnCancel = dialog.findViewById(R.id.btnCancel);
+        MaterialButton btnSubmit = dialog.findViewById(R.id.btnSubmit);
+        
+        // Update rating text when rating changes
+        ratingBar.setOnRatingBarChangeListener((bar, rating, fromUser) -> {
+            String[] ratingTexts = {"Rất tệ", "Tệ", "Bình thường", "Tốt", "Rất tốt", "Tuyệt vời"};
+            int index = (int) rating;
+            if (index > 0 && index <= ratingTexts.length) {
+                tvRatingText.setText(ratingTexts[index - 1]);
+            }
+        });
+        
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        
+        btnSubmit.setOnClickListener(v -> {
+            float rating = ratingBar.getRating();
+            String comment = etComment.getText().toString().trim();
+            
+            if (rating == 0) {
+                Toast.makeText(this, "Vui lòng chọn số sao đánh giá", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            if (comment.isEmpty()) {
+                Toast.makeText(this, "Vui lòng nhập nhận xét", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            long result = dbHelper.addReview(product.getId(), userId, rating, comment);
+            if (result != -1) {
+                Toast.makeText(this, "✅ Cảm ơn bạn đã đánh giá", Toast.LENGTH_SHORT).show();
+                dialog.dismiss();
+                // Reload product and reviews
+                loadProductDetails(product.getId());
+                loadReviews();
+            } else {
+                Toast.makeText(this, "❌ Lỗi khi gửi đánh giá", Toast.LENGTH_SHORT).show();
+            }
+        });
+        
+        dialog.show();
     }
 
     @Override
